@@ -3,6 +3,15 @@ sdp2022
 
 DoSSIER @ SDP2022
 
+
+## Installation
+
+```bash
+$ conda create --name sdp2022 python==3.9.12
+$ pip install -r requirements.txt
+```
+
+
 Project Organization
 ------------
 
