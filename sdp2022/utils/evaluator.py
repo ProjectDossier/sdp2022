@@ -2,6 +2,7 @@ from os.path import join, isfile
 import csv
 from typing import List
 from sklearn.metrics import f1_score
+import numpy as np
 
 
 class Evaluator:
@@ -9,8 +10,8 @@ class Evaluator:
     """
     def __init__(self,
                  write_csv: bool = True,
-                 metric="f1",
-                 output_path: str = "../reports/"
+                 metric="f1_weighted",
+                 output_path: str = "../../reports/"
                  ):
         self.metric = metric
         self.output_path = output_path
@@ -19,7 +20,7 @@ class Evaluator:
                      "f1_micro": "micro",
                      "f1_weighted": "weighted",
                      "f1": None}
-        self.csv_headers = ["epoch"] + [i for i in self.eval.keys()]
+        self.csv_headers = ["epoch"] + [i for i in self.eval.keys()][:-1]
 
     def __call__(self,
                  model=None,
@@ -34,7 +35,9 @@ class Evaluator:
 
         if model is not None:
             pred_scores = model.predict(examples)
-            self.pred_scores = pred_scores
+            pred_scores = pred_scores
+
+        pred_scores = np.argmax(pred_scores, axis=1).tolist()
 
         eval = {}
         for name, metric in self.eval.items():
@@ -51,5 +54,5 @@ class Evaluator:
                 if not out_file_exists:
                     writer.writerow(self.csv_headers)
 
-                writer.writerow([epoch] + list(eval.values()))
+                writer.writerow([epoch] + list(eval.values())[:-1])
         return acc

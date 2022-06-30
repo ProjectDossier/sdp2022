@@ -14,7 +14,9 @@ with open('../../models/bert_classifier/config.yml') as f:
 data_module = SDPDataModule(
     train_batch_size=config.TRAIN_BATCH_SIZE,
     test_batch_size=config.TEST_BATCH_SIZE,
-    n_train_samples=config.N_TRAIN_SAMPLES
+    n_train_samples=config.N_TRAIN_SAMPLES,
+    n_val_samples=config.N_VAL_SAMPLES,
+    n_test_samples=config.N_TEST_SAMPLES,
 )
 
 n_training_steps = (data_module.expected_batches *
@@ -30,7 +32,7 @@ model = BertClassifier(
 )
 
 checkpoint_callback = ModelCheckpoint(
-    dirpath="./checkpoints",
+    dirpath="../../models/bert_classifier/checkpoints",
     filename="best-checkpoint_",
     save_top_k=1,
     verbose=True,

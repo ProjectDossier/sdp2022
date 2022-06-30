@@ -6,10 +6,21 @@ from .batch_processing import BatchProcessing
 
 
 class SDPDataModule(pl.LightningDataModule, ABC):
-    def __init__(self, train_batch_size: int, test_batch_size: int, n_train_samples: int):
+    def __init__(
+            self,
+            train_batch_size: int,
+            test_batch_size: int,
+            n_train_samples: int,
+            n_val_samples: int = None,
+            n_test_samples: int = None
+    ):
         super().__init__()
         self.expected_batches = n_train_samples / train_batch_size
-        batch_processing = BatchProcessing(train_batch_size=train_batch_size)
+        batch_processing = BatchProcessing(
+            train_batch_size=train_batch_size,
+            n_val_samples=n_val_samples,
+            n_test_samples=n_test_samples
+        )
         train_sample_size = int(len(batch_processing.train) // self.expected_batches)
         self.n_labels = len(batch_processing.classes)
 
@@ -21,7 +32,7 @@ class SDPDataModule(pl.LightningDataModule, ABC):
         self.test_batch_size = test_batch_size
 
         self.train_batch_processing = batch_processing.build_train_batch
-        self.val_batch_processing = batch_processing.build_test_batch
+        self.val_batch_processing = batch_processing.build_val_batch
         self.eval_batch_processing = batch_processing.build_test_batch
 
     def train_dataloader(self):
