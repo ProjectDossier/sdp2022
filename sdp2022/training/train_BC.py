@@ -1,15 +1,13 @@
-import sys
-sys.path.insert(0, "/data/oespitia/sdp2022")
 import pytorch_lightning as pl
 import yaml
 from dotmap import DotMap
 from sdp2022.data.SDPDataModule import SDPDataModule
-from models.bert_classifier.model import BertClassifier
+from bert_classifier import BertClassifier
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
 
-with open('../../models/bert_classifier/config.yml') as f:
+with open('./config.yml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)["bert_classifier"]
     config = DotMap(config)
 
