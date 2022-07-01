@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "/data/oespitia/sdp2022")
 import pytorch_lightning as pl
 import yaml
 from dotmap import DotMap
@@ -25,7 +27,7 @@ n_training_steps = (data_module.expected_batches *
 
 model = BertClassifier(
     model_name=config.MODEL_NAME,
-    num_labels=data_module.n_labels,
+    num_labels=data_module.n_labels + 1,
     n_warmup_steps=config.WARMUP_STEPS,
     n_training_steps=n_training_steps,
     batch_size=config.TRAIN_BATCH_SIZE,
@@ -50,7 +52,8 @@ trainer = pl.Trainer(
     gpus=1,
     progress_bar_refresh_rate=1,
     accumulate_grad_batches=config.ACCUM_ITER,
-    check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH
+    check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH,
+    log_every_n_steps=10
 )
 
 trainer.fit(model, data_module)

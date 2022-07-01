@@ -89,10 +89,12 @@ class BatchProcessing:
 
         n_x_class = self.train_batch_size // len(self.classes) + 1
 
-        batch_, labels_, lengths , sample_classes= [], [], [], []
+        batch_, labels_, lengths, sample_classes = [], [], [], []
         for class_ in self.classes:
-            sample_classes.append(class_)
             samples = [i for i in range(len(labels)) if labels[i] == class_]
+            if len(samples) == 0:
+                continue
+            sample_classes.append(class_)
             random.shuffle(samples)
             samples_chunk = [sample_ids[i] for i in samples[:n_x_class]]
             lengths.append(len(samples_chunk))
@@ -100,7 +102,7 @@ class BatchProcessing:
             batch_.extend(samples_chunk)
             if len(labels_) == self.train_batch_size:
                 break
-
+        # TODO complete batch with random sample of the remaining samples
         batch_ = self.train.loc[batch_]
         batch = self.tokenize_samples(list(batch_.title))
         labels = tensor(labels_).type(LongTensor)
