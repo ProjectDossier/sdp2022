@@ -27,11 +27,13 @@ class BatchProcessing:
         self.tokenizer_name = tokenizer_name
 
         random.seed(r_seed)
-        path = '../../data/raw/'
+        path = '../data/raw/'
 
         if mode == 'trainig':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
             data = pd.read_csv(data.open(data.filelist[0].filename))
+            self.data = data
+
             n_samples = len(data)
             val_size = int(n_samples * splits["val"])
 
