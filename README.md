@@ -11,6 +11,12 @@ $ conda create --name sdp2022 python==3.9.12
 $ pip install -r requirements.txt
 ```
 
+Install the `sdp2022` package:
+
+```bash
+$ pip install .
+```
+
 
 Project Organization
 ------------
