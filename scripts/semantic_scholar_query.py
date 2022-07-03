@@ -20,9 +20,9 @@ def query_api(paper_id, field):
 def semantic_scholar_mapping(out_path: str):
     with open(join_path(out_path, 'CORE_s_scholar_mapping_train.jsonl'), "r") as f_in:
         with open(join_path(out_path, 'references_citations_train.jsonl'), "w") as f_out:
-            idx = 1
+            idx = 0
             for line in tqdm(f_in):
-                idx += 2
+                idx += 1
                 paper = json.loads(line)
                 paper['references'] = []
                 paper['citations'] = []
@@ -34,7 +34,7 @@ def semantic_scholar_mapping(out_path: str):
                         [paper['citations'].append(i['citingPaper']) for i in citations['data']]
                     f_out.write(json.dumps(paper))
                     f_out.write('\n')
-                if idx % 90 == 0:
+                if (idx * 2) % 90 == 0:
                     time.sleep(300)
 
 
