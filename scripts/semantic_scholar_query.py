@@ -22,10 +22,10 @@ def semantic_scholar_mapping(out_path: str):
         with open(join_path(out_path, 'references_citations_train.jsonl'), "w") as f_out:
             idx = 1
             for line in tqdm(f_in):
+                idx += 2
                 paper = json.loads(line)
                 paper['references'] = []
                 paper['citations'] = []
-                idx += 1
                 references, _ = query_api(paper['paperId'], "references")
                 citations, _ = query_api(paper['paperId'], "citations")
                 if len(references['data']) > 0:
