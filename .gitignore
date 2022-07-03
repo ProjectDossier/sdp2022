@@ -73,5 +73,5 @@ target/
 data/external/
 data/raw/
 data/processed/
-
+reports/
 .DS_Store
