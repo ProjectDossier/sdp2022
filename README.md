@@ -17,6 +17,8 @@ Install the `sdp2022` package:
 $ pip install .
 ```
 
+Add your CORE API key into `data/api_key.txt` file
+
 
 Project Organization
 ------------
