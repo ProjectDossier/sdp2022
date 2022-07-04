@@ -9,7 +9,8 @@ from transformers import AdamW, AutoConfig, \
 
 class BertClassifier(pl.LightningModule, ABC):
     def __init__(self, model_name: str, num_labels: int = None,
-                 n_training_steps=None, n_warmup_steps=None, batch_size=16):
+                 n_training_steps=None, n_warmup_steps=None, batch_size=16,
+                 pred_samples=None, map_classes=None):
         super().__init__()
         self.n_training_steps = n_training_steps
         self.batch_size = batch_size
@@ -31,7 +32,8 @@ class BertClassifier(pl.LightningModule, ABC):
         self.criterion = nn.CrossEntropyLoss(reduction='none')
         self.softmax = nn.Softmax(dim=1)
 
-        self.evaluator = Evaluator()
+        self.evaluator = Evaluator(pred_samples=pred_samples,
+                                   map_classes=map_classes)
 
     def forward(self, input_ids, attention_mask, token_type_ids):
         sequence_output = self.bert(input_ids,
@@ -62,6 +64,8 @@ class BertClassifier(pl.LightningModule, ABC):
 
     def eval_epoch(self, outputs, name, epoch=-1):
         ids, labels, preds = [], [], []
+        if name == 'pred':
+            outputs = outputs[0]
         for output in outputs:
             ids.extend(output["id"])
             labels.extend(output["labels"])

@@ -27,7 +27,7 @@ class BatchProcessing:
         self.tokenizer_name = tokenizer_name
 
         random.seed(r_seed)
-        path = '../data/raw/'
+        path = '../../data/raw/'
 
         if mode == 'trainig':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
@@ -67,7 +67,11 @@ class BatchProcessing:
         elif mode == 'testing':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
             data = pd.read_csv(data.open(data.filelist[0].filename))
-            self.classes = data["theme"].unique()
+            classes = data["theme"].unique()
+            map_classes = {}
+            for i, class_ in enumerate(classes):
+                map_classes[i] = class_
+            self.map_classes = map_classes
             data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
             self.test = pd.read_csv(data.open(data.filelist[0].filename))
 
@@ -129,6 +133,12 @@ class BatchProcessing:
         return batch, labels, sample_ids
 
     def build_test_batch(self, sample_ids: List):
+        batch = list(self.test.loc[sample_ids].title)
+        batch = self.tokenize_samples(batch)
+        labels = list(self.test.loc[sample_ids].label)
+        return batch, labels, sample_ids
+
+    def build_pred_batch(self, sample_ids: List):
         batch = list(self.test.loc[sample_ids].title)
         batch = self.tokenize_samples(batch)
         return batch, [-1] * len(sample_ids), sample_ids

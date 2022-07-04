@@ -1,8 +1,8 @@
 ---
 bert_classifier:
-  N_TEST_SAMPLES: null
+  N_TEST_SAMPLES: 32
   DATA_PATH : "../../data/"
   LOGGER_NAME : "BC_test"
   MODEL_NAME : "bert-base-uncased"
-  TEST_BATCH_SIZE : 512
-  CHECKPOINT: "best-checkpoint_"
+  TEST_BATCH_SIZE : 16
+  CHECKPOINT: "best-checkpoint_.ckpt"
