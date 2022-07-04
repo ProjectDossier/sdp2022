@@ -63,12 +63,16 @@ class BatchProcessing:
 
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]
-            if n_test_samples is not None:
-                self.test = self.test[:n_test_samples]
 
         elif mode == 'testing':
-            test = zipfile.ZipFile(join_path(path, test_f_name), 'r')
-            self.test = pd.read_csv(test.open(test.filelist[0].filename))
+            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
+            data = pd.read_csv(data.open(data.filelist[0].filename))
+            self.classes = data["theme"].unique()
+            data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
+            self.test = pd.read_csv(data.open(data.filelist[0].filename))
+
+        if n_test_samples is not None:
+            self.test = self.test[:n_test_samples]
 
     def tokenize_samples(self, texts):
         tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name,
@@ -127,8 +131,7 @@ class BatchProcessing:
     def build_test_batch(self, sample_ids: List):
         batch = list(self.test.loc[sample_ids].title)
         batch = self.tokenize_samples(batch)
-        labels = list(self.test.loc[sample_ids].label)
-        return batch, labels, sample_ids
+        return batch, [-1] * len(sample_ids), sample_ids
 
 
 

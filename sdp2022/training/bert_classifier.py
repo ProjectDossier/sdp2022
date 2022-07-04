@@ -88,6 +88,12 @@ class BertClassifier(pl.LightningModule, ABC):
     def test_epoch_end(self, outputs):
         self.eval_epoch(outputs, "dev")
 
+    def predict_step(self, batch, batch_idx):
+        return self.eval_batch(batch)
+
+    def on_predict_epoch_end(self, outputs):
+        self.eval_epoch(outputs, "pred")
+
     def configure_optimizers(self):
         param_optimizer = list(self.named_parameters())
         optimizer_class = AdamW
