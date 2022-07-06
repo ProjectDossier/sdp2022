@@ -12,7 +12,7 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             test_batch_size: int = 16,
             n_train_samples: int = 1024,
             n_val_samples: int = None,
-            n_test_samples: int = None,
+            n_test_samples: Optional[int] = None,
             mode: str = 'training'
     ):
         super().__init__()
