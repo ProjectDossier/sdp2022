@@ -1,7 +1,7 @@
 import zipfile
 import pandas as pd
 from os.path import join as join_path
-from typing import Dict, List
+from typing import Dict, List, Optional
 import random
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
@@ -20,8 +20,8 @@ class BatchProcessing:
             r_seed: int = 42,
             tokenizer_name: str = "bert-base-uncased",
             train_batch_size: int = 16,
-            n_val_samples: int = None,
-            n_test_samples: int = None
+            n_val_samples: Optional[int] = None,
+            n_test_samples: Optional[int] = None
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
@@ -74,6 +74,27 @@ class BatchProcessing:
             self.map_classes = map_classes
             data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
             self.test = pd.read_csv(data.open(data.filelist[0].filename))
+
+        elif mode == 'validation':
+            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
+            data = pd.read_csv(data.open(data.filelist[0].filename))
+
+            classes = data["theme"].unique()
+            map_classes = {}
+            self.map_classes = {}
+            for i, class_ in enumerate(classes):
+                map_classes[class_] = i
+                self.map_classes[i] == class_
+            self.classes = list(map_classes.values())
+
+            data["label"] = data.replace({"theme": map_classes})["theme"]
+
+            _, self.test, _, _ = train_test_split(
+                data,
+                data.label,
+                test_size=splits["test"],
+                random_state=r_seed
+            )
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
@@ -142,6 +163,3 @@ class BatchProcessing:
         batch = list(self.test.loc[sample_ids].title)
         batch = self.tokenize_samples(batch)
         return batch, [-1] * len(sample_ids), sample_ids
-
-
-

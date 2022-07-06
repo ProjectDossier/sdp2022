@@ -1,5 +1,5 @@
 from abc import ABC
-
+from typing import Optional
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from .batch_processing import BatchProcessing
@@ -8,10 +8,10 @@ from .batch_processing import BatchProcessing
 class SDPDataModule(pl.LightningDataModule, ABC):
     def __init__(
             self,
-            train_batch_size: int = None,
+            train_batch_size: Optional[int] = None,
             test_batch_size: int = 16,
             n_train_samples: int = 1024,
-            n_val_samples: int = None,
+            n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
             mode: str = 'training'
     ):
