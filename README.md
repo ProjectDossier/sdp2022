@@ -20,6 +20,13 @@ $ pip install .
 Add your CORE API key into `data/api_key.txt` file
 
 
+Install spacy language model:
+
+```nashorn js
+$ python -m spacy download en_core_web_sm
+```
+
+
 Project Organization
 ------------
 
