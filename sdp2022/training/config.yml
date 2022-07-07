@@ -14,3 +14,19 @@ bert_classifier:
   MODEL_NAME : "bert-base-uncased"
   TRAIN_BATCH_SIZE : 64
   TEST_BATCH_SIZE : 512
+
+xtremedistil_classifier:
+  SEED : 42
+  N_EPOCHS : 20
+  PATIENCE : 5
+  ACCUM_ITER : 2
+  WARMUP_STEPS : 0
+  EVAL_EVERY_N_EPOCH : 1
+  N_TRAIN_SAMPLES : 16384
+  N_VAL_SAMPLES : null
+  N_TEST_SAMPLES: null
+  DATA_PATH : "../../data/"
+  LOGGER_NAME : "BC_titles_abstracts"
+  MODEL_NAME : "microsoft/xtremedistil-l6-h384-uncased"
+  TRAIN_BATCH_SIZE : 32
+  TEST_BATCH_SIZE : 64
