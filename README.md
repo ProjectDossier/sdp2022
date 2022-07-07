@@ -14,7 +14,7 @@ $ pip install -r requirements.txt
 Install the `sdp2022` package:
 
 ```bash
-$ pip install .
+$ pip install -e .
 ```
 
 Add your CORE API key into `data/api_key.txt` file
