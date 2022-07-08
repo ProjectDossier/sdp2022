@@ -9,6 +9,8 @@ from torch import tensor, LongTensor, FloatTensor
 from sklearn.utils.class_weight import compute_class_weight as c_weights
 import numpy as np
 
+INPUT_COLUMN = 'title' # or input_text for title + abstract
+
 
 class BatchProcessing:
     def __init__(
@@ -32,6 +34,8 @@ class BatchProcessing:
         if mode == 'trainig':
             data = pd.read_csv(join_path(path, train_f_name))
             self.data = data
+            self.data.description.fillna(" ", inplace=True)
+            self.data['input_text'] = list(self.data.title + ". Abstract: " + self.data.description)
 
             n_samples = len(data)
             val_size = int(n_samples * splits["val"])
@@ -134,7 +138,7 @@ class BatchProcessing:
         # TODO complete batch with random sample of the remaining samples
         # FIXME don't assign back to batch_
         batch_ = self.train.loc[batch_]
-        batch = self.tokenize_samples(list(batch_.title))
+        batch = self.tokenize_samples(list(batch_[INPUT_COLUMN]))
         labels = tensor(labels_).type(LongTensor)
         weights = c_weights(
             class_weight='balanced',
@@ -147,18 +151,18 @@ class BatchProcessing:
         return batch, labels, weights
 
     def build_val_batch(self, sample_ids: List):
-        batch = list(self.val.loc[sample_ids].title)
+        batch = list(self.val.loc[sample_ids][INPUT_COLUMN])
         batch = self.tokenize_samples(batch)
         labels = list(self.val.loc[sample_ids].label)
         return batch, labels, sample_ids
 
     def build_test_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids][INPUT_COLUMN])
         batch = self.tokenize_samples(batch)
         labels = list(self.test.loc[sample_ids].label)
         return batch, labels, sample_ids
 
     def build_pred_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids][INPUT_COLUMN])
         batch = self.tokenize_samples(batch)
         return batch, [-1] * len(sample_ids), sample_ids
