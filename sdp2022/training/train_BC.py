@@ -6,6 +6,7 @@ from bert_classifier import BertClassifier
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
+
 if __name__ == '__main__':
 
     with open('./config.yml') as f:
@@ -30,6 +31,7 @@ if __name__ == '__main__':
         n_warmup_steps=config.WARMUP_STEPS,
         n_training_steps=n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
+        metric=config.TRACK_METRIC
     )
 
     checkpoint_callback = ModelCheckpoint(
@@ -37,12 +39,12 @@ if __name__ == '__main__':
         filename="best-checkpoint_",
         save_top_k=1,
         verbose=True,
-        monitor="acc",
+        monitor=config.TRACK_METRIC,
         mode="max"
     )
 
     logger = TensorBoardLogger("../../reports/SDP_logs", name=config.LOGGER_NAME)
-    early_stopping_callback = EarlyStopping(monitor='acc', patience=config.PATIENCE, mode='max')
+    early_stopping_callback = EarlyStopping(monitor=config.TRACK_METRIC, patience=config.PATIENCE, mode='max')
 
     trainer = pl.Trainer(
         logger=logger,
