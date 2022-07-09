@@ -32,3 +32,20 @@ xtremedistil_classifier:
   TRAIN_BATCH_SIZE : 32
   TEST_BATCH_SIZE : 64
   TRACK_METRIC : "f1_weighted"
+
+specter_classifier:
+  SEED : 42
+  N_EPOCHS : 30
+  PATIENCE : 4
+  ACCUM_ITER : null
+  WARMUP_STEPS : 0
+  EVAL_EVERY_N_EPOCH : 1
+  N_TRAIN_SAMPLES : 16384
+  N_VAL_SAMPLES : null
+  N_TEST_SAMPLES: null
+  DATA_PATH : "../../data/"
+  LOGGER_NAME : "Specter_titles"
+  MODEL_NAME : "sentence-transformers/allenai-specter"
+  TRAIN_BATCH_SIZE : 64
+  TEST_BATCH_SIZE : 512
+  TRACK_METRIC : "f1_weighted"
