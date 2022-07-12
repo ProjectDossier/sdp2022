@@ -1,13 +1,72 @@
-import zipfile
-import pandas as pd
-from os.path import join as join_path
-from typing import Dict, List, Optional
-import random
-from sklearn.model_selection import train_test_split
-from transformers import AutoTokenizer
-from torch import tensor, LongTensor, FloatTensor
-from sklearn.utils.class_weight import compute_class_weight as c_weights
+import json
 import numpy as np
+import pandas as pd
+import random
+import zipfile
+
+from os.path import join as join_path
+from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight as c_weights
+from torch import tensor, LongTensor, FloatTensor
+from transformers import AutoTokenizer
+from typing import Dict, List, Optional
+
+
+def augment_data(
+        data,
+        mode: str ='train',
+        sources_path: str = "../../data/external/",
+        add_conected: bool = True
+):
+    # TODO define modes for different combinations of fields
+    data['text'] = None
+    data['mode'] = None
+    data.reset_index(drop=True, inplace=True)
+    # TODO use additional fields from az
+    s1 = pd.read_csv(f"{sources_path}az_{mode}_core_500000.csv")
+    s2 = pd.read_csv(f"{sources_path}{mode}_core.csv")
+    with open(f"{sources_path}references_citations_{mode}.jsonl", "r") as f:
+        s3 = {}
+        for line in f:
+            try:
+                item = json.loads(line)
+                s3[item['core_id']] = item
+            except json.decoder.JSONDecodeError:
+                pass
+
+    augmented_data = []
+
+    for row in data.to_dict(orient="records"):
+        row['text'] = row['title']
+        row['mode'] = 'title'
+        augmented_data.append(row.copy())
+        if row['description'] not in [float("nan"), np.nan, None]:
+            row['text'] = row['description']
+            row['mode'] = 'description'
+            augmented_data.append(row.copy())
+        if add_conected:
+            try:
+                for reference in s3[row['core_id']]['references']:
+                    row['text'] = reference['title']
+                    row['mode'] = 'reference'
+                    augmented_data.append(row.copy())
+            except KeyError:
+                pass
+            try:
+                for citation in s3[row['core_id']]['citations']:
+                    row['text'] = citation['title']
+                    row['mode'] = 'citation'
+                    augmented_data.append(row.copy())
+            except KeyError:
+                pass
+
+    augmented_data = pd.DataFrame(augmented_data)
+    augmented_data.drop('index', inplace=True, axis=1)
+    augmented_data = augmented_data.drop_duplicates()
+    # you would expect reset index to do the same but it skips some positions
+    augmented_data['index'] = range(len(augmented_data))
+    augmented_data.set_index('index', drop=True, inplace=True)
+    return augmented_data
 
 
 class BatchProcessing:
@@ -84,7 +143,7 @@ class BatchProcessing:
             self.map_classes = {}
             for i, class_ in enumerate(classes):
                 map_classes[class_] = i
-                self.map_classes[i] == class_
+                self.map_classes[i] = class_
             self.classes = list(map_classes.values())
 
             data["label"] = data.replace({"theme": map_classes})["theme"]
@@ -95,6 +154,7 @@ class BatchProcessing:
                 test_size=splits["test"],
                 random_state=r_seed
             )
+            self.test = augment_data(self.test)
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
@@ -160,6 +220,10 @@ class BatchProcessing:
         return batch, labels, sample_ids
 
     def build_pred_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids].text)
         batch = self.tokenize_samples(batch)
-        return batch, [-1] * len(sample_ids), sample_ids
+        try:
+            labels = list(self.test.loc[sample_ids].label)
+        except KeyError:
+            labels = [-1] * len(sample_ids)
+        return batch, labels, sample_ids
