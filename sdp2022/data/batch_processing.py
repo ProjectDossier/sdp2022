@@ -13,8 +13,8 @@ import numpy as np
 class BatchProcessing:
     def __init__(
             self,
-            train_f_name: str = 'task1_train_dataset.csv.zip',
-            test_f_name: str = 'task1_test_no_label.csv.zip',
+            train_f_name: str = 'task1_train_dataset.csv',
+            test_f_name: str = 'task1_test_no_label.csv',
             mode: str = 'trainig',
             splits: Dict = {'train': .60, 'val': .10, 'test': .30},
             r_seed: int = 42,
@@ -30,8 +30,7 @@ class BatchProcessing:
         path = '../../data/raw/'
 
         if mode == 'trainig':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            data = pd.read_csv(join_path(path, train_f_name))
             self.data = data
 
             n_samples = len(data)
@@ -65,8 +64,7 @@ class BatchProcessing:
                 self.val = self.val[:n_val_samples]
 
         elif mode == 'testing':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            data = pd.read_csv(join_path(path, train_f_name))
             classes = data["theme"].unique()
             map_classes = {}
             for i, class_ in enumerate(classes):
@@ -134,6 +132,7 @@ class BatchProcessing:
             if len(labels_) == self.train_batch_size:
                 break
         # TODO complete batch with random sample of the remaining samples
+        # FIXME don't assign back to batch_
         batch_ = self.train.loc[batch_]
         batch = self.tokenize_samples(list(batch_.title))
         labels = tensor(labels_).type(LongTensor)
