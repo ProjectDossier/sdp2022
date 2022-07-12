@@ -14,6 +14,7 @@ bert_classifier:
   MODEL_NAME : "bert-base-uncased"
   TRAIN_BATCH_SIZE : 64
   TEST_BATCH_SIZE : 512
+  TRACK_METRIC : "f1_weighted"
 
 xtremedistil_classifier:
   SEED : 42
@@ -30,3 +31,4 @@ xtremedistil_classifier:
   MODEL_NAME : "microsoft/xtremedistil-l6-h384-uncased"
   TRAIN_BATCH_SIZE : 32
   TEST_BATCH_SIZE : 64
+  TRACK_METRIC : "f1_weighted"
