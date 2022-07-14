@@ -12,25 +12,25 @@ from transformers import AutoTokenizer
 from typing import Dict, List, Optional
 
 
-def augment_data(
+def add_text(
         data,
-        mode: str ='train',
+        mode: str = 'train',
         sources_path: str = "../../data/external/",
-        add_conected: bool = False
+        augment: List[str] = ["description", "citations", "references"]
 ):
-    # TODO define modes for different combinations of fields
     data['text'] = None
     data['mode'] = None
     data.reset_index(drop=True, inplace=True)
     # TODO use additional fields from az
-    s1 = pd.read_csv(f"{sources_path}az_{mode}_core_500000.csv")
-    s2 = pd.read_csv(f"{sources_path}{mode}_core.csv")
+    # aditional sources
+    source_1 = pd.read_csv(f"{sources_path}az_{mode}_core_500000.csv")
+    source_2 = pd.read_csv(f"{sources_path}{mode}_core.csv")
     with open(f"{sources_path}references_citations_{mode}.jsonl", "r") as f:
-        s3 = {}
+        source_3 = {}
         for line in f:
             try:
                 item = json.loads(line)
-                s3[item['core_id']] = item
+                source_3[item['core_id']] = item
             except json.decoder.JSONDecodeError:
                 pass
 
@@ -40,20 +40,22 @@ def augment_data(
         row['text'] = row['title']
         row['mode'] = 'title'
         augmented_data.append(row.copy())
-        if row['description'] not in [float("nan"), np.nan, None]:
-            row['text'] = row['description']
-            row['mode'] = 'description'
-            augmented_data.append(row.copy())
-        if add_conected:
+        if "description" in augment:
+            if row['description'] not in [float("nan"), np.nan, None]:
+                row['text'] = row['description']
+                row['mode'] = 'description'
+                augmented_data.append(row.copy())
+        if "references" in augment:
             try:
-                for reference in s3[row['core_id']]['references']:
+                for reference in source_3[row['core_id']]['references']:
                     row['text'] = reference['title']
                     row['mode'] = 'reference'
                     augmented_data.append(row.copy())
             except KeyError:
                 pass
+        if "citations" in augment:
             try:
-                for citation in s3[row['core_id']]['citations']:
+                for citation in source_3[row['core_id']]['citations']:
                     row['text'] = citation['title']
                     row['mode'] = 'citation'
                     augmented_data.append(row.copy())
@@ -81,7 +83,7 @@ class BatchProcessing:
             train_batch_size: int = 16,
             n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
-            augment: bool = True
+            augment: List[str] = []
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
@@ -120,10 +122,10 @@ class BatchProcessing:
                 test_size=val_size,
                 random_state=r_seed
             )
-            if augment:
-                self.train = augment_data(self.train, add_conected=False)
-                self.val = augment_data(self.val, add_conected=False)
-                self.test = augment_data(self.test, add_conected=False)
+
+            self.train = add_text(self.train, augment=augment)
+            self.val = add_text(self.val, augment=augment)
+            self.test = add_text(self.test, augment=augment)
 
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]
@@ -160,8 +162,8 @@ class BatchProcessing:
                 test_size=splits["test"],
                 random_state=r_seed
             )
-            if augment:
-                self.test = augment_data(self.test)
+
+            self.test = add_text(self.test, augment=augment)
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
