@@ -75,10 +75,10 @@ class Evaluator:
             if model is not None:
                 pred_scores = model.predict(examples)
                 pred_scores = pred_scores
-
+            pred_classes = np.argmax(pred_scores, axis=1).tolist()
             eval = {}
             for name, metric in self.eval.items():
-                eval[name] = f1_score(labels, pred_scores, average=metric)
+                eval[name] = f1_score(labels, pred_classes, average=metric)
 
             acc = eval[self.metric]
 

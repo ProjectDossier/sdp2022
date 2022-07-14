@@ -16,7 +16,7 @@ def augment_data(
         data,
         mode: str ='train',
         sources_path: str = "../../data/external/",
-        add_conected: bool = True
+        add_conected: bool = False
 ):
     # TODO define modes for different combinations of fields
     data['text'] = None
@@ -80,13 +80,14 @@ class BatchProcessing:
             tokenizer_name: str = "bert-base-uncased",
             train_batch_size: int = 16,
             n_val_samples: Optional[int] = None,
-            n_test_samples: Optional[int] = None
+            n_test_samples: Optional[int] = None,
+            augment: bool = True
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
 
         random.seed(r_seed)
-        path = '../../data/raw/'
+        path = '../data/raw/'
 
         if mode == 'trainig':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
@@ -119,6 +120,10 @@ class BatchProcessing:
                 test_size=val_size,
                 random_state=r_seed
             )
+            if augment:
+                self.train = augment_data(self.train, add_conected=False)
+                self.val = augment_data(self.val, add_conected=False)
+                self.test = augment_data(self.test, add_conected=False)
 
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]
@@ -133,6 +138,7 @@ class BatchProcessing:
             self.map_classes = map_classes
             data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
             self.test = pd.read_csv(data.open(data.filelist[0].filename))
+            self.data = self.test
 
         elif mode == 'validation':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
@@ -154,7 +160,8 @@ class BatchProcessing:
                 test_size=splits["test"],
                 random_state=r_seed
             )
-            self.test = augment_data(self.test)
+            if augment:
+                self.test = augment_data(self.test)
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
@@ -188,11 +195,14 @@ class BatchProcessing:
             sample_classes.append(class_)
             random.shuffle(samples)
             samples_chunk = [sample_ids[i] for i in samples[:n_x_class]]
+            if len(labels_) + len(samples_chunk) > self.train_batch_size:
+                samples_chunk = samples_chunk[:len(labels_) + len(samples_chunk) - self.train_batch_size]
             lengths.append(len(samples_chunk))
             labels_.extend([class_] * lengths[-1])
             batch_.extend(samples_chunk)
             if len(labels_) == self.train_batch_size:
                 break
+
         # TODO complete batch with random sample of the remaining samples
         batch_ = self.train.loc[batch_]
         batch = self.tokenize_samples(list(batch_.title))
@@ -204,7 +214,6 @@ class BatchProcessing:
         )
         weights = sum([[w] * l for w, l in zip(weights, lengths)], [])
         weights = tensor(weights[:self.train_batch_size]).type(FloatTensor)
-
         return batch, labels, weights
 
     def build_val_batch(self, sample_ids: List):
@@ -214,7 +223,7 @@ class BatchProcessing:
         return batch, labels, sample_ids
 
     def build_test_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids].text)
         batch = self.tokenize_samples(batch)
         labels = list(self.test.loc[sample_ids].label)
         return batch, labels, sample_ids

@@ -20,8 +20,8 @@ def query_api(query, limit=1):
 
 
 def semantic_scholar_mapping(out_path: str):
-    data = BatchProcessing().data
-    with open(join_path(out_path, 's_scholar_ids.jsonl'), "w") as f:
+    data = BatchProcessing(mode='testing', augment=False).data
+    with open(join_path(out_path, 's_scholar_ids_test.jsonl'), "w") as f:
         for idx, row in tqdm(data.iterrows()):
             query = row.title
             result, _ = query_api(query)
