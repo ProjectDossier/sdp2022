@@ -36,9 +36,10 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             self.train_batch_processing = batch_processing.build_train_batch
             self.val_batch_processing = batch_processing.build_val_batch
             self.eval_batch_processing = batch_processing.build_test_batch
-        elif 'testing':
+        elif mode == 'testing':
+            # TODO discriminate testing and validations
             batch_processing = BatchProcessing(
-                mode='testing',
+                mode='validation',
                 n_test_samples=n_test_samples)
             self.pred_data = list(batch_processing.test.index.values)
             self.pred_batch_size = test_batch_size
