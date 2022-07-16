@@ -13,7 +13,8 @@ with open('./config.yml') as f:
 data_module = SDPDataModule(
     test_batch_size=config.TEST_BATCH_SIZE,
     n_test_samples=config.N_TEST_SAMPLES,
-    mode='testing'
+    mode=config.MODE,
+    augment=config.AUGMENT
 )
 
 model = BertClassifier.load_from_checkpoint(
@@ -22,6 +23,7 @@ model = BertClassifier.load_from_checkpoint(
     num_labels=len(data_module.map_classes.keys()) + 1,
     pred_samples=data_module.pred_samples,
     map_classes=data_module.map_classes,
+    run_id=config.RUN_ID
 )
 
 trainer = pl.Trainer(gpus=1)

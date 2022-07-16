@@ -48,7 +48,8 @@ class Evaluator:
                  metric="f1_weighted",
                  output_path: str = "../../reports/",
                  pred_samples=None,
-                 map_classes=None
+                 map_classes=None,
+                 run_id: str = None
                  ):
         self.metric = metric
         self.output_path = output_path
@@ -60,6 +61,7 @@ class Evaluator:
         self.csv_headers = ["epoch"] + [i for i in self.eval.keys()][:-1]
         self.pred_samples = pred_samples
         self.map_classes = map_classes
+        self.run_id = run_id
 
     def __call__(self,
                  model=None,
@@ -116,7 +118,8 @@ class Evaluator:
             pred_scores = []
             preds = {'core_id': core_ids, 'theme': []}
             for id in core_ids:
-                labels.append(p_copy[p_copy.core_id == id].label.values[0])
+                if -1 not in labels:
+                    labels.append(p_copy[p_copy.core_id == id].label.values[0])
                 t_preds = p_copy[p_copy.core_id == id].pred.tolist()
                 preds['theme'].append(max(set(t_preds), key=t_preds.count))
 
@@ -137,7 +140,7 @@ class Evaluator:
                 except KeyError:
                     pass
 
-            pred_samples.to_csv(f'{output_path}DoSSIER_run.csv')
+            pred_samples.to_csv(f'{output_path}{self.run_id}.csv')
 
         else:
             pred_classes = np.argmax(pred_scores, axis=1).tolist()

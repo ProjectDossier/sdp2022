@@ -76,8 +76,8 @@ class BatchProcessing:
             self,
             train_f_name: str = 'task1_train_dataset.csv.zip',
             test_f_name: str = 'task1_test_no_label.csv.zip',
-            path: 'stt' = '../../data/raw/',
-            mode: str = 'trainig',
+            path: str = '../../data/raw/',
+            mode: str = 'train',
             splits: Dict = {'train': .60, 'val': .10, 'test': .30},
             r_seed: int = 42,
             tokenizer_name: str = "bert-base-uncased",
@@ -91,7 +91,7 @@ class BatchProcessing:
 
         random.seed(r_seed)
 
-        if mode == 'trainig':
+        if mode == 'train':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
             data = pd.read_csv(data.open(data.filelist[0].filename))
             self.data = data
@@ -130,7 +130,7 @@ class BatchProcessing:
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]
 
-        elif mode == 'testing':
+        elif mode == 'test':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
             data = pd.read_csv(data.open(data.filelist[0].filename))
             classes = data["theme"].unique()
@@ -139,10 +139,12 @@ class BatchProcessing:
                 map_classes[i] = class_
             self.map_classes = map_classes
             data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
-            self.test = pd.read_csv(data.open(data.filelist[0].filename))
-            self.data = self.test
+            test = pd.read_csv(data.open(data.filelist[0].filename))
+            self.data = test
 
-        elif mode == 'validation':
+            self.test = add_text(test, augment=augment, mode='train')
+
+        elif mode == 'val':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
             data = pd.read_csv(data.open(data.filelist[0].filename))
 
@@ -156,14 +158,14 @@ class BatchProcessing:
 
             data["label"] = data.replace({"theme": map_classes})["theme"]
 
-            _, self.test, _, _ = train_test_split(
+            _, test, _, _ = train_test_split(
                 data,
                 data.label,
                 test_size=splits["test"],
                 random_state=r_seed
             )
-
-            self.test = add_text(self.test, augment=augment)
+            # mode is train here because it uses splits from train set
+            self.test = add_text(test, augment=augment, mode='train')
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
@@ -235,6 +237,6 @@ class BatchProcessing:
         batch = self.tokenize_samples(batch)
         try:
             labels = list(self.test.loc[sample_ids].label)
-        except KeyError:
+        except AttributeError:
             labels = [-1] * len(sample_ids)
         return batch, labels, sample_ids

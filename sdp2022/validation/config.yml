@@ -1,8 +1,11 @@
 ---
 bert_classifier:
   N_TEST_SAMPLES: Null
-  DATA_PATH : "../../data/"
-  LOGGER_NAME : "BC_test"
-  MODEL_NAME : "bert-base-uncased"
-  TEST_BATCH_SIZE : 256
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
   CHECKPOINT: "best-checkpoint_.ckpt"
+  RUN_ID: "DOSSIER_TDRC"
+  AUGMENT: ["title", "description", "references", "citations"]
+  MODE: "test"
