@@ -13,14 +13,26 @@ def agg_preds(x):
     fields = list(x['mode'].values)
     rel_fields = ["description", "title"]
 
-    if "description" in fields:
+    if "description" in fields and len(x[~x['mode'].isin(rel_fields)]) > 0:
+        # title + description + add fields
         x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .25)
         x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .25)
+        weight = .5 / len(x[~x['mode'].isin(rel_fields)])
+        x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
+
     elif len(x[~x['mode'].isin(rel_fields)]) > 0:
+        # title + add fields
         weight = .5 / len(x[~x['mode'].isin(rel_fields)])
         x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
         x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
+
+    elif "description" in fields:
+        # title + abstract
+        x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .5)
+        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
+
     else:
+        # only title
         x.loc[x['mode'] == "title", 'agg_preds'] = x[x['mode'] == "title"].predictions
 
     x['agg_preds'] = [x.agg_preds.sum()] * len(x)
