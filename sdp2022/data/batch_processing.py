@@ -76,6 +76,7 @@ class BatchProcessing:
             self,
             train_f_name: str = 'task1_train_dataset.csv.zip',
             test_f_name: str = 'task1_test_no_label.csv.zip',
+            path: 'stt' = '../../data/raw/',
             mode: str = 'trainig',
             splits: Dict = {'train': .60, 'val': .10, 'test': .30},
             r_seed: int = 42,
@@ -83,13 +84,12 @@ class BatchProcessing:
             train_batch_size: int = 16,
             n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
-            augment: List[str] = []
+            augment: List[str] = ["description", "citations", "references"]
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
 
         random.seed(r_seed)
-        path = '../data/raw/'
 
         if mode == 'trainig':
             data = zipfile.ZipFile(join_path(path, train_f_name), 'r')

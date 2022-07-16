@@ -7,6 +7,27 @@ from sklearn.metrics import f1_score
 import numpy as np
 
 
+def agg_preds(x):
+
+    x['agg_preds'] = 0
+    fields = list(x['mode'].values)
+    rel_fields = ["description", "title"]
+
+    if "description" in fields:
+        x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .25)
+        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .25)
+    elif len(x[~x['mode'].isin(rel_fields)]) > 0:
+        weight = .5 / len(x[~x['mode'].isin(rel_fields)])
+        x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
+        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
+    else:
+        x.loc[x['mode'] == "title", 'agg_preds'] = x[x['mode'] == "title"].predictions
+
+    x['agg_preds'] = [x.agg_preds.sum()] * len(x)
+
+    return x
+
+
 class Evaluator:
     """
     """
@@ -39,17 +60,43 @@ class Evaluator:
 
         output_path = self.output_path
 
+        np.save(
+            file=f"{output_path}Evaluator_{out_f_name}_results.pkl",
+            arr=pred_scores,
+            allow_pickle=True,
+            fix_imports=True
+        )
+
+        # in case the original set of examples is given
         if self.pred_samples is not None:
-            p_copy = self.pred_samples.copy()
-            c_pred_scores = pred_scores
-            np.save(f"{output_path}Evaluator_{out_f_name}_results.pkl", c_pred_scores, allow_pickle=True, fix_imports=True)
+
+            pred_samples = self.pred_samples.copy()
+            pred_samples['predictions'] = [i for i in pred_scores]
+
+            if 'theme' in pred_samples.columns:
+                pred_samples.drop(columns='theme', inplace=True)
+
+            # in case the samples are augmented, the core_ids would be redundant
+            # scores from different sources are aggregated
+            if len(pred_samples.core_id.unique()) != len(pred_samples):
+                pred_samples = pred_samples.groupby("core_id").apply(agg_preds)
+                pred_samples.drop_duplicates(
+                    subset='core_id',
+                    inplace=False,
+                    ignore_index=True
+                )
+                pred_field = 'agg_preds'
+            else:
+                pred_field = 'predictions'
+
+            # map to original classes
             preds = {'index': [], 'pred': []}
-            pred_classes = np.argmax(pred_scores, axis=1).tolist()
+            pred_classes = np.argmax(np.vstack(tuple(pred_samples[pred_field])), axis=1).tolist()
             for id, label in zip(ids, pred_classes):
                 preds['index'].append(id)
                 preds['pred'].append(label)
 
-            p_copy = pd.merge(p_copy, pd.DataFrame.from_dict(preds),
+            p_copy = pd.merge(pred_samples, pd.DataFrame.from_dict(preds),
                               left_index=True, right_index=True)
 
             core_ids = self.pred_samples.core_id.unique()
@@ -63,15 +110,24 @@ class Evaluator:
 
             pred_scores = preds['theme']
 
-            self.pred_samples = self.pred_samples[self.pred_samples['mode'] == 'title']
-            self.pred_samples.drop(['mode', 'text'], inplace=False, axis=1)
-            self.pred_samples = pd.merge(self.pred_samples, pd.DataFrame.from_dict(preds),
-                                         on='core_id')
-            self.pred_samples.reset_index(drop=True, inplace=True)
+            pred_samples = pred_samples[pred_samples['mode'] == 'title']
+            pred_samples = pd.merge(pred_samples, pd.DataFrame.from_dict(preds),
+                                    on='core_id')
+            pred_samples.reset_index(drop=True, inplace=True)
 
-            self.pred_samples.to_csv(f'{output_path}DoSSIER_run.csv')
+            # map classes to actual labels
+            pred_samples["theme"] = pred_samples.replace({"theme": self.map_classes})["theme"]
 
-        if labels is not None:
+            # save report
+            for i in ['label', 'text', 'mode', 'predictions', 'agg_preds']:
+                try:
+                    pred_samples.drop(columns=i, inplace=True)
+                except KeyError:
+                    pass
+
+            pred_samples.to_csv(f'{output_path}DoSSIER_run.csv')
+
+        if labels is not None and -1 not in labels:
             if model is not None:
                 pred_scores = model.predict(examples)
                 pred_scores = pred_scores
