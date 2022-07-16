@@ -108,7 +108,7 @@ class Evaluator:
                 t_preds = p_copy[p_copy.core_id == id].pred.tolist()
                 preds['theme'].append(max(set(t_preds), key=t_preds.count))
 
-            pred_scores = preds['theme']
+            pred_classes = preds['theme']
 
             pred_samples = pred_samples[pred_samples['mode'] == 'title']
             pred_samples = pd.merge(pred_samples, pd.DataFrame.from_dict(preds),
@@ -127,11 +127,13 @@ class Evaluator:
 
             pred_samples.to_csv(f'{output_path}DoSSIER_run.csv')
 
-        if labels is not None and -1 not in labels:
-            if model is not None:
-                pred_scores = model.predict(examples)
-                pred_scores = pred_scores
+        else:
             pred_classes = np.argmax(pred_scores, axis=1).tolist()
+
+        if labels is not None and -1 not in labels:
+            # if model is not None:
+            #     pred_scores = model.predict(examples)
+            #     pred_scores = pred_scores
             eval = {}
             for name, metric in self.eval.items():
                 eval[name] = f1_score(labels, pred_classes, average=metric)
