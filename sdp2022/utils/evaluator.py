@@ -85,7 +85,6 @@ class Evaluator:
         """
 
         output_path = self.output_path
-        pred_scores = np.argmax(pred_scores, axis=1).tolist()
 
         np.save(
             file=f"{output_path}Evaluator_{out_f_name}_results.pkl",
