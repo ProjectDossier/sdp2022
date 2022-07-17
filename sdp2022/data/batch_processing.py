@@ -12,6 +12,10 @@ from transformers import AutoTokenizer
 from typing import Dict, List, Optional
 
 
+train_columns = ["text", "index", "mode", "theme"]
+test_columns = ["text", "index", "mode"]
+
+
 def add_text(
         data,
         mode: str = 'train',
@@ -61,6 +65,20 @@ def add_text(
                     augmented_data.append(row.copy())
             except KeyError:
                 pass
+
+    merged_az = pd.merge(source_1, data, left_on="original_index", right_on="index")
+    for row in merged_az.to_dict(orient="records"):
+        for az_column in ["Claim_Abs", "Method_Abs", "Result_Abs", "Conclusion_Abs"]:
+            if row[az_column] != "":
+                row["text"] = row[az_column]
+                row["mode"] = f"az_{az_column}"
+                augmented_data.append(row[train_columns].copy())
+
+    for row in source_2.to_dict(orient="records"):
+        row["text"] = row["title"]
+        row["index"] = row["original_id"]
+        row["mode"] = "recommendation"
+        augmented_data.append(row[train_columns].copy())
 
     augmented_data = pd.DataFrame(augmented_data)
     augmented_data.drop('index', inplace=True, axis=1)
