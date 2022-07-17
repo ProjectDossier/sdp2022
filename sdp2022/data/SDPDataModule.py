@@ -14,15 +14,17 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
             mode: str = 'train',
-            augment: List[str] = ["description", "citations", "references"]
+            augment: List[str] = ["description", "citations", "references", "az", "recommendations"]
     ):
         super().__init__()
         if mode == 'train':
             self.expected_batches = n_train_samples / train_batch_size
+            # TODO: fix augment parameter for training data
             batch_processing = BatchProcessing(
                 train_batch_size=train_batch_size,
                 n_val_samples=n_val_samples,
-                n_test_samples=n_test_samples
+                n_test_samples=n_test_samples,
+                augment=["description", "citations", "references"]
             )
             train_sample_size = int(len(batch_processing.train) // self.expected_batches)
             self.n_labels = len(batch_processing.classes)

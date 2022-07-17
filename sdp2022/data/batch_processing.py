@@ -14,9 +14,9 @@ from typing import Dict, List, Optional
 
 def add_text(
         data,
+        augment: List[str],
         mode: str = 'train',
         sources_path: str = "../../data/processed/",
-        augment: List[str] = ["description", "citations", "references"]
 ):
     data['text'] = None
     data['mode'] = None
@@ -24,7 +24,9 @@ def add_text(
     # TODO use additional fields from az
     # aditional sources
     source_1 = pd.read_csv(f"{sources_path}az_{mode}_core.csv")
+    source_1.fillna("", inplace=True)
     source_2 = pd.read_csv(f"{sources_path}{mode}_recommend_core.csv")
+    source_2.fillna("", inplace=True)
     with open(f"{sources_path}references_citations_{mode}.jsonl", "r") as f:
         source_3 = {}
         for line in f:
@@ -62,22 +64,27 @@ def add_text(
             except KeyError:
                 pass
 
-    merged_az = pd.merge(source_1, data, left_on="original_index", right_on="index")
-    for row in merged_az.to_dict(orient="records"):
-        for az_column in ["Claim_Abs", "Method_Abs", "Result_Abs", "Conclusion_Abs"]:
-            if row[az_column] != "":
-                row["text"] = row[az_column]
-                row["mode"] = f"az_{az_column}"
-                augmented_data.append(row.copy())
+    if "az" in augment:
+        merged_az = pd.merge(source_1, data, left_on="original_index", right_on="index", how="left")
+        # merged_az.fillna("", inplace=True)
+        for row in merged_az.to_dict(orient="records"):
+            for az_column in ["Claim_Abs", "Method_Abs", "Result_Abs", "Conclusion_Abs"]:
+                if not row[az_column].isna() and len(row[az_column]) > 2:
+                    row["text"] = row[az_column]
+                    row["mode"] = f"az_{az_column}"
+                    augmented_data.append(row.copy())
 
-    for row in source_2.to_dict(orient="records"):
-        row["text"] = row["title"]
-        row["index"] = row["original_id"]
-        row["mode"] = "recommendation"
-        augmented_data.append(row.copy())
+    if "recommendations" in augment:
+        for row in source_2.to_dict(orient="records"):
+            if row["title"] != "":
+                row["text"] = row["title"]
+                row["index"] = row["original_id"]
+                row["mode"] = "recommendation"
+                augmented_data.append(row.copy())
 
     augmented_data = pd.DataFrame(augmented_data)
     augmented_data.drop('index', inplace=True, axis=1)
+    augmented_data.dropna(subset=['text'], inplace=True)
     augmented_data = augmented_data.drop_duplicates()
     # you would expect reset index to do the same but it skips some positions
     augmented_data['index'] = range(len(augmented_data))
@@ -88,6 +95,7 @@ def add_text(
 class BatchProcessing:
     def __init__(
             self,
+            augment: List[str],
             train_f_name: str = 'task1_train_dataset.csv',
             test_f_name: str = 'task1_test_no_label.csv',
             path: str = '../../data/raw/',
@@ -98,7 +106,6 @@ class BatchProcessing:
             train_batch_size: int = 16,
             n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
-            augment: List[str] = ["description", "citations", "references"]
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
