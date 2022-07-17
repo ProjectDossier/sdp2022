@@ -118,8 +118,10 @@ class Evaluator:
             pred_scores = []
             preds = {'core_id': core_ids, 'theme': []}
             for id in core_ids:
-                if -1 not in labels:
+                try:
                     labels.append(p_copy[p_copy.core_id == id].label.values[0])
+                except AttributeError:
+                    pass
                 t_preds = p_copy[p_copy.core_id == id].pred.tolist()
                 preds['theme'].append(max(set(t_preds), key=t_preds.count))
 
@@ -145,7 +147,7 @@ class Evaluator:
         else:
             pred_classes = np.argmax(pred_scores, axis=1).tolist()
 
-        if labels is not None and -1 not in labels:
+        if labels is not None and -1 not in labels and len(labels) > 0:
             # if model is not None:
             #     pred_scores = model.predict(examples)
             #     pred_scores = pred_scores
@@ -166,3 +168,5 @@ class Evaluator:
 
                     writer.writerow([epoch] + list(eval.values())[:-1])
             return acc
+        else:
+            return 0
