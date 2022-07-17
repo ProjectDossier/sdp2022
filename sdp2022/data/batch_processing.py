@@ -12,14 +12,10 @@ from transformers import AutoTokenizer
 from typing import Dict, List, Optional
 
 
-train_columns = ["text", "index", "mode", "theme"]
-test_columns = ["text", "index", "mode"]
-
-
 def add_text(
         data,
         mode: str = 'train',
-        sources_path: str = "../../data/external/",
+        sources_path: str = "../../data/processed/",
         augment: List[str] = ["description", "citations", "references"]
 ):
     data['text'] = None
@@ -27,8 +23,8 @@ def add_text(
     data.reset_index(drop=True, inplace=True)
     # TODO use additional fields from az
     # aditional sources
-    source_1 = pd.read_csv(f"{sources_path}az_{mode}_core_500000.csv")
-    source_2 = pd.read_csv(f"{sources_path}{mode}_core.csv")
+    source_1 = pd.read_csv(f"{sources_path}az_{mode}_core.csv")
+    source_2 = pd.read_csv(f"{sources_path}{mode}_recommend_core.csv")
     with open(f"{sources_path}references_citations_{mode}.jsonl", "r") as f:
         source_3 = {}
         for line in f:
@@ -72,13 +68,13 @@ def add_text(
             if row[az_column] != "":
                 row["text"] = row[az_column]
                 row["mode"] = f"az_{az_column}"
-                augmented_data.append(row[train_columns].copy())
+                augmented_data.append(row.copy())
 
     for row in source_2.to_dict(orient="records"):
         row["text"] = row["title"]
         row["index"] = row["original_id"]
         row["mode"] = "recommendation"
-        augmented_data.append(row[train_columns].copy())
+        augmented_data.append(row.copy())
 
     augmented_data = pd.DataFrame(augmented_data)
     augmented_data.drop('index', inplace=True, axis=1)
@@ -92,8 +88,8 @@ def add_text(
 class BatchProcessing:
     def __init__(
             self,
-            train_f_name: str = 'task1_train_dataset.csv.zip',
-            test_f_name: str = 'task1_test_no_label.csv.zip',
+            train_f_name: str = 'task1_train_dataset.csv',
+            test_f_name: str = 'task1_test_no_label.csv',
             path: str = '../../data/raw/',
             mode: str = 'train',
             splits: Dict = {'train': .60, 'val': .10, 'test': .30},
@@ -110,8 +106,7 @@ class BatchProcessing:
         random.seed(r_seed)
 
         if mode == 'train':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            data = pd.read_csv(join_path(path, train_f_name))
             self.data = data
 
             n_samples = len(data)
@@ -149,22 +144,19 @@ class BatchProcessing:
                 self.val = self.val[:n_val_samples]
 
         elif mode == 'test':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            data = pd.read_csv(join_path(path, train_f_name))
             classes = data["theme"].unique()
             map_classes = {}
             for i, class_ in enumerate(classes):
                 map_classes[i] = class_
             self.map_classes = map_classes
-            data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
-            test = pd.read_csv(data.open(data.filelist[0].filename))
+            test = pd.read_csv(join_path(path, test_f_name))
             self.data = test
 
             self.test = add_text(test, augment=augment, mode='train')
 
         elif mode == 'val':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            data = pd.read_csv(join_path(path, train_f_name))
 
             classes = data["theme"].unique()
             map_classes = {}
