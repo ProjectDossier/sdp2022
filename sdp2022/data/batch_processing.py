@@ -225,6 +225,7 @@ class BatchProcessing:
                 break
 
         # TODO complete batch with random sample of the remaining samples
+        # FIXME don't assign back to batch_
         batch_ = self.train.loc[batch_]
         batch = self.tokenize_samples(list(batch_.title))
         labels = tensor(labels_).type(LongTensor)
