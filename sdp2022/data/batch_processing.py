@@ -21,7 +21,6 @@ def add_text(
     data['text'] = None
     data['mode'] = None
     data.reset_index(drop=True, inplace=True)
-    # TODO use additional fields from az
     # aditional sources
     source_1 = pd.read_csv(f"{sources_path}az_{mode}_core.csv")
     source_1.fillna("", inplace=True)
@@ -160,7 +159,7 @@ class BatchProcessing:
             test = pd.read_csv(join_path(path, test_f_name))
             self.data = test
 
-            self.test = add_text(test, augment=augment, mode='train')
+            self.test = add_text(test, augment=augment, mode='test')
 
         elif mode == 'val':
             data = pd.read_csv(join_path(path, train_f_name))

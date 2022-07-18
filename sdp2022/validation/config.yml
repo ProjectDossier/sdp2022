@@ -1,11 +1,41 @@
 ---
-bert_classifier:
+1:
   N_TEST_SAMPLES: Null
   DATA_PATH: "../../data/"
   LOGGER_NAME: "BC_test"
   MODEL_NAME: "bert-base-uncased"
   TEST_BATCH_SIZE : 512
-  CHECKPOINT: "best-checkpoint_.ckpt"
+  CHECKPOINT: "best-checkpoint.ckpt"
   RUN_ID: "DOSSIER_TDRC"
   AUGMENT: ["title", "description", "references", "citations"]
+  MODE: "test"
+2:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
+  CHECKPOINT: "best-checkpoint.ckpt"
+  RUN_ID: "DOSSIER_TD"
+  AUGMENT: ["title", "description"]
+  MODE: "test"
+3:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
+  CHECKPOINT: "best-checkpoint.ckpt"
+  RUN_ID: "DOSSIER_T"
+  AUGMENT: ["title"]
+  MODE: "test"
+4:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_T-v1"
+  AUGMENT: ["title"]
   MODE: "test"

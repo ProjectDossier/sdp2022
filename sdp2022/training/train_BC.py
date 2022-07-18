@@ -50,7 +50,7 @@ if __name__ == '__main__':
         logger=logger,
         callbacks=[early_stopping_callback, checkpoint_callback],
         max_epochs=config.N_EPOCHS,
-        gpus=[0,1],
+        gpus=[0, 1],
         progress_bar_refresh_rate=1,
         accumulate_grad_batches=config.ACCUM_ITER,
         check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH,

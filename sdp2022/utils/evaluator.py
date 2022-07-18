@@ -167,7 +167,7 @@ class Evaluator:
             for name, metric in self.eval.items():
                 eval[name] = f1_score(labels, pred_classes, average=metric)
 
-            acc = eval[self.metric]
+            # acc = eval[self.metric]
 
             csv_file = f"Evaluator_{out_f_name}_results.csv"
             if output_path is not None and self.write_csv:
@@ -181,4 +181,4 @@ class Evaluator:
                     writer.writerow([epoch] + list(eval.values())[:-1])
             return eval
         else:
-            return 0
+            return {}

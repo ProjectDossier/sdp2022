@@ -2,11 +2,12 @@ from dotmap import DotMap
 import pytorch_lightning as pl
 from sdp2022.training.bert_classifier import BertClassifier
 from sdp2022.data.SDPDataModule import SDPDataModule
+from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
 
 
 with open('./config.yml') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)["bert_classifier"]
+    config = yaml.load(f, Loader=yaml.FullLoader)[4]
     config = DotMap(config)
 
 
@@ -26,6 +27,17 @@ model = BertClassifier.load_from_checkpoint(
     run_id=config.RUN_ID
 )
 
-trainer = pl.Trainer(gpus=1)
-trainer.predict(model=model,
-                dataloaders=data_module.predict_dataloader())
+logger = TensorBoardLogger(
+    save_dir="../../reports/SDP_logs",
+    name='BC_preds'
+)
+
+trainer = pl.Trainer(
+    logger=logger,
+    gpus=1
+)
+
+trainer.predict(
+    model=model,
+    dataloaders=data_module.predict_dataloader()
+)
