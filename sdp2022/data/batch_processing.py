@@ -61,14 +61,11 @@ def add_text(
                     augmented_data.append(row.copy())
             except KeyError:
                 pass
-
-    if "az" in augment:
-        merged_az = pd.merge(source_1, data, left_on="original_index", right_on="index", how="left")
-        # merged_az.fillna("", inplace=True)
-        for row in merged_az.to_dict(orient="records"):
+        if "az" in augment:
+            az_row = source_1.loc[row['index']]
             for az_column in ["Claim_Abs", "Method_Abs", "Result_Abs", "Conclusion_Abs"]:
-                if not row[az_column].isna() and len(row[az_column]) > 2:
-                    row["text"] = row[az_column]
+                if az_row[az_column] not in [float("nan"), np.nan, None, ""]:
+                    row["text"] = az_row[az_column]
                     row["mode"] = f"az_{az_column}"
                     augmented_data.append(row.copy())
 
