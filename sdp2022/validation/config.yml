@@ -39,3 +39,23 @@
   RUN_ID: "DOSSIER_T-v1"
   AUGMENT: ["title"]
   MODE: "test"
+5:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TD-v1"
+  AUGMENT: ["title", "description"]
+  MODE: "test"
+6:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRC-v1"
+  AUGMENT: ["title", "description", "references", "citations"]
+  MODE: "test"
