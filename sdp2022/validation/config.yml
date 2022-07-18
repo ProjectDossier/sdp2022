@@ -69,3 +69,13 @@
   RUN_ID: "DOSSIER_TDRCAZ-v1"
   AUGMENT: ["title", "description", "references", "citations", "az"]
   MODE: "test"
+8:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 768
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRCAZR-v1"
+  AUGMENT: ["title", "description", "references", "citations", "az", "recommendations"]
+  MODE: "test"

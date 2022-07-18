@@ -41,7 +41,7 @@ def add_text(
         row['mode'] = 'title'
         augmented_data.append(row.copy())
         if "description" in augment:
-            if row['description'] not in [float("nan"), np.nan, None]:
+            if row['description'] not in [float("nan"), np.nan, None, ""]:
                 row['text'] = row['description']
                 row['mode'] = 'description'
                 augmented_data.append(row.copy())
@@ -68,14 +68,13 @@ def add_text(
                     row["text"] = az_row[az_column]
                     row["mode"] = f"az_{az_column}"
                     augmented_data.append(row.copy())
-
-    if "recommendations" in augment:
-        for row in source_2.to_dict(orient="records"):
-            if row["title"] != "":
-                row["text"] = row["title"]
-                row["index"] = row["original_id"]
-                row["mode"] = "recommendation"
-                augmented_data.append(row.copy())
+        if "recommendations" in augment:
+            samples = source_2[source_2["original_id"] == row["core_id"]]
+            for _, sample in samples.iterrows():
+                if sample['title'] not in [float("nan"), np.nan, None, ""]:
+                    row["text"] = row["title"]
+                    row["mode"] = "recommendation"
+                    augmented_data.append(row.copy())
 
     augmented_data = pd.DataFrame(augmented_data)
     augmented_data.drop('index', inplace=True, axis=1)
