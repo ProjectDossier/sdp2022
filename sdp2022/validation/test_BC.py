@@ -7,7 +7,7 @@ import yaml
 
 
 with open('./config.yml') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)[6]
+    config = yaml.load(f, Loader=yaml.FullLoader)[10]
     config = DotMap(config)
 
 
@@ -24,7 +24,8 @@ model = BertClassifier.load_from_checkpoint(
     num_labels=len(data_module.map_classes.keys()) + 1,
     pred_samples=data_module.pred_samples,
     map_classes=data_module.map_classes,
-    run_id=config.RUN_ID
+    run_id=config.RUN_ID,
+    weighting_scheme=config.WEIGHTING_SCHEME
 )
 
 logger = TensorBoardLogger(

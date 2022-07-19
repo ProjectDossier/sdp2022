@@ -17,7 +17,8 @@ class BertClassifier(pl.LightningModule, ABC):
             pred_samples=None,
             map_classes=None,
             run_id=None,
-            metric="f1_weighted"
+            metric="f1_weighted",
+            weighting_scheme="free"
     ):
         super().__init__()
         self.n_training_steps = n_training_steps
@@ -44,7 +45,8 @@ class BertClassifier(pl.LightningModule, ABC):
             metric=metric,
             pred_samples=pred_samples,
             map_classes=map_classes,
-            run_id=run_id
+            run_id=run_id,
+            weighting_scheme=weighting_scheme
         )
 
     def forward(self, input_ids, attention_mask, token_type_ids):

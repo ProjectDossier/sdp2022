@@ -7,33 +7,37 @@ from sklearn.metrics import f1_score
 import numpy as np
 
 
-def agg_preds(x):
+def agg_preds(x, weighting_scheme: str = "free"):
 
     x['agg_preds'] = 0
     fields = list(x['mode'].values)
     rel_fields = ["description", "title"]
+    if weighting_scheme == "free":
+        if "description" in fields and len(x[~x['mode'].isin(rel_fields)]) > 0:
+            # title + description + add fields
+            x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .25)
+            x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .25)
+            weight = .5 / len(x[~x['mode'].isin(rel_fields)])
+            x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
 
-    if "description" in fields and len(x[~x['mode'].isin(rel_fields)]) > 0:
-        # title + description + add fields
-        x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .25)
-        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .25)
-        weight = .5 / len(x[~x['mode'].isin(rel_fields)])
-        x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
+        elif len(x[~x['mode'].isin(rel_fields)]) > 0:
+            # title + add fields
+            weight = .5 / len(x[~x['mode'].isin(rel_fields)])
+            x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
+            x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
 
-    elif len(x[~x['mode'].isin(rel_fields)]) > 0:
-        # title + add fields
-        weight = .5 / len(x[~x['mode'].isin(rel_fields)])
-        x.loc[~x['mode'].isin(rel_fields), 'agg_preds'] = np.multiply(x[~x['mode'].isin(rel_fields)].predictions, weight)
-        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
+        elif "description" in fields:
+            # title + abstract
+            x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .5)
+            x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
 
-    elif "description" in fields:
-        # title + abstract
-        x.loc[x['mode'] == "description", 'agg_preds'] = np.multiply(x[x['mode'] == "description"].predictions, .5)
-        x.loc[x['mode'] == "title", 'agg_preds'] = np.multiply(x[x['mode'] == "title"].predictions, .5)
+        else:
+            # only title
+            x.loc[x['mode'] == "title", 'agg_preds'] = x[x['mode'] == "title"].predictions
 
-    else:
-        # only title
-        x.loc[x['mode'] == "title", 'agg_preds'] = x[x['mode'] == "title"].predictions
+    elif weighting_scheme == "uniform":
+        weight = 1 / len(x)
+        x['agg_preds'] = np.multiply(x.predictions, weight)
 
     x['agg_preds'] = [x.agg_preds.sum()] * len(x)
 
@@ -50,7 +54,8 @@ class Evaluator:
                  output_path: str = "../../reports/",
                  pred_samples=None,
                  map_classes=None,
-                 run_id: str = None
+                 run_id: str = None,
+                 weighting_scheme: str = "uniform"
                  ):
         self.metric = metric
         self.output_path = output_path
@@ -63,6 +68,7 @@ class Evaluator:
         self.pred_samples = pred_samples
         self.map_classes = map_classes
         self.run_id = run_id
+        self.weighting_scheme = weighting_scheme
 
     def __call__(self,
                  model=None,
@@ -105,7 +111,8 @@ class Evaluator:
             # in case the samples are augmented, the core_ids would be redundant
             # scores from different sources are aggregated
             if len(pred_samples.core_id.unique()) != len(pred_samples):
-                pred_samples = pred_samples.groupby("core_id").apply(agg_preds)
+                pred_samples = pred_samples.groupby("core_id").apply(agg_preds,
+                                                                     weighting_scheme=self.weighting_scheme)
                 pred_samples.drop_duplicates(
                     subset='core_id',
                     inplace=False,
