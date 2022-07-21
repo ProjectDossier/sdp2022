@@ -7,7 +7,7 @@ import yaml
 
 
 with open('./config.yml') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)[10]
+    config = yaml.load(f, Loader=yaml.FullLoader)[10]  # name of the configuration
     config = DotMap(config)
 
 
