@@ -1,35 +1,112 @@
-import zipfile
-import pandas as pd
-from os.path import join as join_path
-from typing import Dict, List, Optional
-import random
-from sklearn.model_selection import train_test_split
-from transformers import AutoTokenizer
-from torch import tensor, LongTensor, FloatTensor
-from sklearn.utils.class_weight import compute_class_weight as c_weights
+import json
 import numpy as np
+import pandas as pd
+import random
+
+from os.path import join as join_path
+from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight as c_weights
+from torch import tensor, LongTensor, FloatTensor
+from transformers import AutoTokenizer
+from typing import Dict, List, Optional
+
+
+def add_text(
+        data,
+        augment: List[str],
+        mode: str = 'train',
+        sources_path: str = "../../data/processed/",
+):
+    data['text'] = None
+    data['mode'] = None
+    data.reset_index(drop=True, inplace=True)
+    # aditional sources
+    source_1 = pd.read_csv(f"{sources_path}az_{mode}_core.csv")
+    source_1.fillna("", inplace=True)
+    source_2 = pd.read_csv(f"{sources_path}{mode}_recommend_core.csv")
+    source_2.fillna("", inplace=True)
+    with open(f"{sources_path}references_citations_{mode}.jsonl", "r") as f:
+        source_3 = {}
+        for line in f:
+            try:
+                item = json.loads(line)
+                source_3[item['core_id']] = item
+            except json.decoder.JSONDecodeError:
+                pass
+
+    augmented_data = []
+
+    for row in data.to_dict(orient="records"):
+        row['text'] = row['title']
+        row['mode'] = 'title'
+        augmented_data.append(row.copy())
+        if "description" in augment:
+            if row['description'] not in [float("nan"), np.nan, None, ""]:
+                row['text'] = row['description']
+                row['mode'] = 'description'
+                augmented_data.append(row.copy())
+        if "references" in augment:
+            try:
+                for reference in source_3[row['core_id']]['references']:
+                    row['text'] = reference['title']
+                    row['mode'] = 'reference'
+                    augmented_data.append(row.copy())
+            except KeyError:
+                pass
+        if "citations" in augment:
+            try:
+                for citation in source_3[row['core_id']]['citations']:
+                    row['text'] = citation['title']
+                    row['mode'] = 'citation'
+                    augmented_data.append(row.copy())
+            except KeyError:
+                pass
+        if "az" in augment:
+            az_row = source_1.loc[row['index']]
+            for az_column in ["Claim_Abs", "Method_Abs", "Result_Abs", "Conclusion_Abs"]:
+                if az_row[az_column] not in [float("nan"), np.nan, None, ""]:
+                    row["text"] = az_row[az_column]
+                    row["mode"] = f"az_{az_column}"
+                    augmented_data.append(row.copy())
+        if "recommendations" in augment:
+            samples = source_2[source_2["original_id"] == row["core_id"]]
+            for _, sample in samples.iterrows():
+                if sample['title'] not in [float("nan"), np.nan, None, ""]:
+                    row["text"] = row["title"]
+                    row["mode"] = "recommendation"
+                    augmented_data.append(row.copy())
+
+    augmented_data = pd.DataFrame(augmented_data)
+    augmented_data.drop('index', inplace=True, axis=1)
+    augmented_data.dropna(subset=['text'], inplace=True)
+    augmented_data = augmented_data.drop_duplicates()
+    # you would expect reset index to do the same but it skips some positions
+    augmented_data['index'] = range(len(augmented_data))
+    augmented_data.set_index('index', drop=True, inplace=True)
+    return augmented_data
 
 
 class BatchProcessing:
     def __init__(
             self,
+            augment: List[str],
             train_f_name: str = 'task1_train_dataset.csv',
             test_f_name: str = 'task1_test_no_label.csv',
-            mode: str = 'trainig',
+            path: str = '../../data/raw/',
+            mode: str = 'train',
             splits: Dict = {'train': .60, 'val': .10, 'test': .30},
             r_seed: int = 42,
             tokenizer_name: str = "bert-base-uncased",
             train_batch_size: int = 16,
             n_val_samples: Optional[int] = None,
-            n_test_samples: Optional[int] = None
+            n_test_samples: Optional[int] = None,
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
 
         random.seed(r_seed)
-        path = '../../data/raw/'
 
-        if mode == 'trainig':
+        if mode == 'train':
             data = pd.read_csv(join_path(path, train_f_name))
             self.data = data
 
@@ -60,39 +137,46 @@ class BatchProcessing:
                 random_state=r_seed
             )
 
+            self.train = add_text(self.train, augment=augment)
+            self.val = add_text(self.val, augment=augment)
+            self.test = add_text(self.test, augment=augment)
+
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]
 
-        elif mode == 'testing':
+        elif mode == 'test':
             data = pd.read_csv(join_path(path, train_f_name))
             classes = data["theme"].unique()
             map_classes = {}
             for i, class_ in enumerate(classes):
                 map_classes[i] = class_
             self.map_classes = map_classes
-            data = zipfile.ZipFile(join_path(path, test_f_name), 'r')
-            self.test = pd.read_csv(data.open(data.filelist[0].filename))
+            test = pd.read_csv(join_path(path, test_f_name))
+            self.data = test
 
-        elif mode == 'validation':
-            data = zipfile.ZipFile(join_path(path, train_f_name), 'r')
-            data = pd.read_csv(data.open(data.filelist[0].filename))
+            self.test = add_text(test, augment=augment, mode='test')
+
+        elif mode == 'val':
+            data = pd.read_csv(join_path(path, train_f_name))
 
             classes = data["theme"].unique()
             map_classes = {}
             self.map_classes = {}
             for i, class_ in enumerate(classes):
                 map_classes[class_] = i
-                self.map_classes[i] == class_
+                self.map_classes[i] = class_
             self.classes = list(map_classes.values())
 
             data["label"] = data.replace({"theme": map_classes})["theme"]
 
-            _, self.test, _, _ = train_test_split(
+            _, test, _, _ = train_test_split(
                 data,
                 data.label,
                 test_size=splits["test"],
                 random_state=r_seed
             )
+            # mode is train here because it uses splits from train set
+            self.test = add_text(test, augment=augment, mode='train')
 
         if n_test_samples is not None:
             self.test = self.test[:n_test_samples]
@@ -126,11 +210,14 @@ class BatchProcessing:
             sample_classes.append(class_)
             random.shuffle(samples)
             samples_chunk = [sample_ids[i] for i in samples[:n_x_class]]
+            if len(labels_) + len(samples_chunk) > self.train_batch_size:
+                samples_chunk = samples_chunk[:len(labels_) + len(samples_chunk) - self.train_batch_size]
             lengths.append(len(samples_chunk))
             labels_.extend([class_] * lengths[-1])
             batch_.extend(samples_chunk)
             if len(labels_) == self.train_batch_size:
                 break
+
         # TODO complete batch with random sample of the remaining samples
         # FIXME don't assign back to batch_
         batch_ = self.train.loc[batch_]
@@ -143,7 +230,6 @@ class BatchProcessing:
         )
         weights = sum([[w] * l for w, l in zip(weights, lengths)], [])
         weights = tensor(weights[:self.train_batch_size]).type(FloatTensor)
-
         return batch, labels, weights
 
     def build_val_batch(self, sample_ids: List):
@@ -153,12 +239,16 @@ class BatchProcessing:
         return batch, labels, sample_ids
 
     def build_test_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids].text)
         batch = self.tokenize_samples(batch)
         labels = list(self.test.loc[sample_ids].label)
         return batch, labels, sample_ids
 
     def build_pred_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].title)
+        batch = list(self.test.loc[sample_ids].text)
         batch = self.tokenize_samples(batch)
-        return batch, [-1] * len(sample_ids), sample_ids
+        try:
+            labels = list(self.test.loc[sample_ids].label)
+        except AttributeError:
+            labels = [-1] * len(sample_ids)
+        return batch, labels, sample_ids

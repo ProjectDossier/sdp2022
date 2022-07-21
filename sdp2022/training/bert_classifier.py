@@ -2,15 +2,24 @@ from abc import ABC
 import numpy as np
 import pytorch_lightning as pl
 from sdp2022.utils.evaluator import Evaluator
-from torch import nn, mean, argmax
+from torch import nn, mean
 from transformers import AdamW, AutoConfig, \
     AutoModel, get_linear_schedule_with_warmup
 
 
 class BertClassifier(pl.LightningModule, ABC):
-    def __init__(self, model_name: str, num_labels: int = None,
-                 n_training_steps=None, n_warmup_steps=None, batch_size=16,
-                 pred_samples=None, map_classes=None, metric="f1_weighted"):
+    def __init__(
+            self, model_name: str,
+            num_labels: int = None,
+            n_training_steps=None,
+            n_warmup_steps=None,
+            batch_size=16,
+            pred_samples=None,
+            map_classes=None,
+            run_id=None,
+            metric="f1_weighted",
+            weighting_scheme="free"
+    ):
         super().__init__()
         self.n_training_steps = n_training_steps
         self.batch_size = batch_size
@@ -32,9 +41,13 @@ class BertClassifier(pl.LightningModule, ABC):
         self.criterion = nn.CrossEntropyLoss(reduction='none')
         self.softmax = nn.Softmax(dim=1)
 
-        self.evaluator = Evaluator(metric=metric,
-                                   pred_samples=pred_samples,
-                                   map_classes=map_classes)
+        self.evaluator = Evaluator(
+            metric=metric,
+            pred_samples=pred_samples,
+            map_classes=map_classes,
+            run_id=run_id,
+            weighting_scheme=weighting_scheme
+        )
 
     def forward(self, input_ids, attention_mask, token_type_ids):
         sequence_output = self.bert(input_ids,
@@ -47,9 +60,11 @@ class BertClassifier(pl.LightningModule, ABC):
 
     def training_step(self, batch, batch_idx):
         batch, labels, weights = batch
-        model_predictions = self(batch["input_ids"],
-                                 batch["attention_mask"],
-                                 batch["token_type_ids"])
+        model_predictions = self(
+            batch["input_ids"],
+            batch["attention_mask"],
+            batch["token_type_ids"]
+        )
 
         loss_value = self.criterion(model_predictions, labels)
         loss_value = mean(loss_value * weights)
@@ -58,9 +73,13 @@ class BertClassifier(pl.LightningModule, ABC):
 
     def eval_batch(self, batch):
         batch, labels, ids = batch
-        preds = self(batch["input_ids"],
-                      batch["attention_mask"],
-                      batch["token_type_ids"])
+
+        preds = self(
+            batch["input_ids"],
+            batch["attention_mask"],
+            batch["token_type_ids"]
+        )
+
         return {"id": ids, "prediction": preds, "labels": labels}
 
     def eval_epoch(self, outputs, name, epoch=-1):
@@ -74,14 +93,16 @@ class BertClassifier(pl.LightningModule, ABC):
 
         preds = np.concatenate(preds, 0)
 
-        eval = self.evaluator(ids=ids,
-                             labels=labels,
-                             pred_scores=preds,
-                             epoch=epoch,
-                             out_f_name=name)
+        eval = self.evaluator(
+            ids=ids,
+            labels=labels,
+            pred_scores=preds,
+            epoch=epoch,
+            out_f_name=name
+        )
+
         for metric, value in eval.items():
             self.log(metric, value, prog_bar=True, logger=True)
-
 
     def validation_step(self, batch, batch_idx):
         return self.eval_batch(batch)
