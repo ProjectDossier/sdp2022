@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Optional, List
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from .batch_processing import BatchProcessing
@@ -13,15 +13,18 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             n_train_samples: int = 1024,
             n_val_samples: Optional[int] = None,
             n_test_samples: Optional[int] = None,
-            mode: str = 'training'
+            mode: str = 'train',
+            augment: List[str] = ["description", "citations", "references", "az", "recommendations"]
     ):
         super().__init__()
-        if mode == 'training':
+        if mode == 'train':
             self.expected_batches = n_train_samples / train_batch_size
+            # TODO: fix augment parameter for training data
             batch_processing = BatchProcessing(
                 train_batch_size=train_batch_size,
                 n_val_samples=n_val_samples,
-                n_test_samples=n_test_samples
+                n_test_samples=n_test_samples,
+                augment=["description", "citations", "references"]
             )
             train_sample_size = int(len(batch_processing.train) // self.expected_batches)
             self.n_labels = len(batch_processing.classes)
@@ -36,11 +39,17 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             self.train_batch_processing = batch_processing.build_train_batch
             self.val_batch_processing = batch_processing.build_val_batch
             self.eval_batch_processing = batch_processing.build_test_batch
-        elif mode == 'testing':
-            # TODO discriminate testing and validations
-            batch_processing = BatchProcessing(
-                mode='validation',
-                n_test_samples=n_test_samples)
+        else:
+            if mode == "val":
+                batch_processing = BatchProcessing(
+                    mode='val',
+                    n_test_samples=n_test_samples,
+                    augment=augment)
+            elif mode == 'test':
+                batch_processing = BatchProcessing(
+                    mode='test',
+                    n_test_samples=n_test_samples,
+                    augment=augment)
             self.pred_data = list(batch_processing.test.index.values)
             self.pred_batch_size = test_batch_size
             self.pred_batch_processing = batch_processing.build_pred_batch
