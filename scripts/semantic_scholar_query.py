@@ -22,7 +22,7 @@ def semantic_scholar_mapping(out_path: str):
         with open(join_path(out_path, 'references_citations_test.jsonl'), "w") as f_out:
             idx = 0
             for line in tqdm(f_in):
-                add_flag = False
+                save_output_for_paper = False
                 idx += 1
                 paper = json.loads(line)
                 paper['references'] = []
