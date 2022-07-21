@@ -31,11 +31,11 @@ def semantic_scholar_mapping(out_path: str):
                 citations, _ = query_api(paper['paperId'], "citations")
                 if len(references['data']) > 0:
                     [paper['references'].append(i['citedPaper']) for i in references['data']]
-                    add_flag = True
+                    save_output_for_paper = True
                 if len(citations['data']) > 0:
                     [paper['citations'].append(i['citingPaper']) for i in citations['data']]
-                    add_flag = True
-                if add_flag:
+                    save_output_for_paper = True
+                if save_output_for_paper:
                     f_out.write(json.dumps(paper))
                     f_out.write('\n')
                 if (idx * 2) % 90 == 0:
