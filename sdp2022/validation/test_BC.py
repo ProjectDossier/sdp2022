@@ -6,7 +6,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
 
 
-with open('./config.yml') as f:
+with open('../../config/prediction_config.yml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)[10]  # name of the configuration
     config = DotMap(config)
 

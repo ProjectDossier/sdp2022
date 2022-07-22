@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 if __name__ == '__main__':
 
-    with open('./config.yml') as f:
+    with open('../../config/train_config.yml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)["xtremedistil_classifier"]
         config = DotMap(config)
 
