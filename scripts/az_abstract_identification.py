@@ -2,7 +2,7 @@ import argparse
 import csv
 import requests
 
-from sdp2022.utils import preprocess_util
+from sdp2022.utils import az_preprocess_util
 
 categories_to_fields_map = {'claim': 'Claim_Abs', 'method': 'Method_Abs',
                             'result': 'Result_Abs', 'conclusion': 'Conclusion_Abs'}
@@ -34,22 +34,22 @@ def identify_az_for_abstracts(input_file, output_file, az_abstract_identificatio
 def split_paragraph_sentences(paragraph):
     # 1. preprocess
     # a. clean non asci
-    cleaned_paragraph = preprocess_util.remove_non_ascii(paragraph)
+    cleaned_paragraph = az_preprocess_util.remove_non_ascii(paragraph)
 
-    cleaned_paragraph = preprocess_util.normalize_abbreviations(cleaned_paragraph)
+    cleaned_paragraph = az_preprocess_util.normalize_abbreviations(cleaned_paragraph)
     # c. remove hyphen
-    cleaned_paragraph = preprocess_util.remove_non_necessary_hyphen(cleaned_paragraph)
+    cleaned_paragraph = az_preprocess_util.remove_non_necessary_hyphen(cleaned_paragraph)
     # d. clean rejected regex
-    cleaned_paragraph = preprocess_util.remove_rejected_regex(cleaned_paragraph)
+    cleaned_paragraph = az_preprocess_util.remove_rejected_regex(cleaned_paragraph)
 
     # 2. split sentences
-    sentences = preprocess_util.split_paragraph_sentences(cleaned_paragraph)
+    sentences = az_preprocess_util.split_paragraph_sentences(cleaned_paragraph)
 
     # 3. post process sentences
     # a. remove non informative  sentences
-    cleaned_sentences = preprocess_util.remove_non_informative_sentences(sentences)
+    cleaned_sentences = az_preprocess_util.remove_non_informative_sentences(sentences)
     # b. merge uncomplete sentences
-    cleaned_sentences = preprocess_util.merge_not_completed_sentences(cleaned_sentences)
+    cleaned_sentences = az_preprocess_util.merge_not_completed_sentences(cleaned_sentences)
 
     return cleaned_sentences
 
