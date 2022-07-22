@@ -18,10 +18,11 @@ def query_api(paper_id, field):
 
 
 def semantic_scholar_mapping(out_path: str):
-    with open(join_path(out_path, 'CORE_s_scholar_mapping_train.jsonl'), "r") as f_in:
-        with open(join_path(out_path, 'references_citations_train.jsonl'), "w") as f_out:
+    with open(join_path(out_path, 's_scholar_ids_test.jsonl'), "r") as f_in:
+        with open(join_path(out_path, 'references_citations_test.jsonl'), "w") as f_out:
             idx = 0
             for line in tqdm(f_in):
+                save_output_for_paper = False
                 idx += 1
                 paper = json.loads(line)
                 paper['references'] = []
@@ -30,8 +31,11 @@ def semantic_scholar_mapping(out_path: str):
                 citations, _ = query_api(paper['paperId'], "citations")
                 if len(references['data']) > 0:
                     [paper['references'].append(i['citedPaper']) for i in references['data']]
-                    if len(citations['data']) > 0:
-                        [paper['citations'].append(i['citingPaper']) for i in citations['data']]
+                    save_output_for_paper = True
+                if len(citations['data']) > 0:
+                    [paper['citations'].append(i['citingPaper']) for i in citations['data']]
+                    save_output_for_paper = True
+                if save_output_for_paper:
                     f_out.write(json.dumps(paper))
                     f_out.write('\n')
                 if (idx * 2) % 90 == 0:

@@ -1,0 +1,102 @@
+---
+1:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
+  CHECKPOINT: "best-checkpoint.ckpt"
+  RUN_ID: "DOSSIER_TDRC"
+  AUGMENT: ["title", "description", "references", "citations"]
+  MODE: "test"
+2:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
+  CHECKPOINT: "best-checkpoint.ckpt"
+  RUN_ID: "DOSSIER_TD"
+  AUGMENT: ["title", "description"]
+  MODE: "test"
+3:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE : 512
+  CHECKPOINT: "best-checkpoint.ckpt"
+  RUN_ID: "DOSSIER_T"
+  AUGMENT: ["title"]
+  MODE: "test"
+4:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_T-v1"
+  AUGMENT: ["title"]
+  MODE: "test"
+5:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TD-v1"
+  AUGMENT: ["title", "description"]
+  MODE: "test"
+6:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRC-v1"
+  AUGMENT: ["title", "description", "references", "citations"]
+  MODE: "test"
+7:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRCAZ-v1"
+  AUGMENT: ["title", "description", "references", "citations", "az"]
+  MODE: "test"
+8:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 768
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRCAZR-v1"
+  AUGMENT: ["title", "description", "references", "citations", "az", "recommendations"]
+  MODE: "test"
+9:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 768
+  CHECKPOINT: "best-checkpoint-v19.ckpt"
+  RUN_ID: "DOSSIER_TDRCR-v19"
+  AUGMENT: ["title", "description", "references", "citations", "recommendations"]
+  MODE: "test"
+10:
+  N_TEST_SAMPLES: Null
+  DATA_PATH: "../../data/"
+  LOGGER_NAME: "BC_test"
+  MODEL_NAME: "bert-base-uncased"
+  TEST_BATCH_SIZE: 512
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  RUN_ID: "DOSSIER_TDRCAZ-v1_U"
+  AUGMENT: [ "title", "description", "references", "citations", "az" ]
+  MODE: "test"
+  WEIGHTING_SCHEME: "uniform"
