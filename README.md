@@ -32,9 +32,13 @@ Project Organization
 
     ├── LICENSE
     ├── README.md                               <- The top-level README for developers using this project.
+    │
+    ├── config                                  <- The YML configuration files containing training and prediction params.
+    │
     ├── data
     │   ├── processed                           <- The final, canonical data sets for modeling.
-    │   └── raw                                 <- The original, immutable data dump.
+    │   ├── raw                                 <- The original, immutable data dump.
+    │   └── external                            <- Additional data resources
     │
     ├── docs                                    <- A default Sphinx project; see sphinx-doc.org for details
     │
