@@ -11,7 +11,7 @@ def pretty_json(json_object):
 
 
 def get_entity(url_fragment):
-    headers={"Authorization":"Bearer "+api_key}
+    headers = {"Authorization": "Bearer " + api_key}
     response = requests.get(api_endpoint + url_fragment, headers=headers)
     if response.status_code == 200:
         return response.json(), response.elapsed.total_seconds()
@@ -34,15 +34,17 @@ with open("../../data/api_key.txt", "r") as apikey_file:
 api_endpoint = "https://api.core.ac.uk/v3/"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_df = pd.read_csv("../../data/raw/task1_test_no_label.csv")
     train_df = pd.read_csv("../../data/raw/task1_train_dataset.csv")
     out_file = "../../data/processed/train_core.csv"
 
     outputs = []
-    for index_i, x in tqdm(enumerate(train_df['core_id'].tolist()), total=(len(train_df))):
+    for index_i, x in tqdm(
+        enumerate(train_df["core_id"].tolist()), total=(len(train_df))
+    ):
         result = get_entity(f"outputs/{x}")[0]
-        result['original_index'] = index_i
+        result["original_index"] = index_i
         outputs.append(result)
 
         if (index_i + 1) % 600 == 0:
