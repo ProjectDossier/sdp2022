@@ -41,6 +41,6 @@ if __name__ == '__main__':
                         dest='path',
                         type=str,
                         help='path to the folder that will contain the output jsonl',
-                        default="../data/external/")
+                        default="../../data/external/")
     path = parser.parse_args().path
     semantic_scholar_mapping(path)
