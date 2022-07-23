@@ -55,14 +55,12 @@ Project Organization
     ├── requirements.txt                        <- The requirements file for reproducing the analysis environment, e.g.
     │                                              generated with `pip freeze > requirements.txt`
     │
-    ├── sdp2022           <- Source code for use in this project.
+    ├── sdp2022                                 <- Source code for use in this project.
     │   │
     │   ├── data                                <- Scripts to download or generate data
     │   │
-    │   ├── utils                                <- Scripts utilities used during data generation or training
+    │   ├── utils                               <- Scripts utilities used during data generation or training
     │   │
     │   ├── training                            <- Scripts to train models
     │   │
-    │   ├── validate                            <- Scripts to validate models
-    │   │
-    │   └── visualization                       <- Scripts to create exploratory and results oriented visualizations
+    │   └── validate                            <- Scripts to validate models
