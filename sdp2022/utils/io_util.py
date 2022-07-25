@@ -33,7 +33,7 @@ def join(path1, path2):
 
 
 def write_json(path, dict):
-    with open(path, 'w') as outfile:
+    with open(path, "w") as outfile:
         json.dump(dict, outfile, indent=2)
     outfile.close()
 
@@ -72,4 +72,4 @@ def write_pickle(data, file_path):
 
 
 def read_pickle(file_path):
-    return pickle.load(open(file_path, 'rb'))
+    return pickle.load(open(file_path, "rb"))

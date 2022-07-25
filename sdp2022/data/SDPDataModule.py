@@ -7,26 +7,34 @@ from .batch_processing import BatchProcessing
 
 class SDPDataModule(pl.LightningDataModule, ABC):
     def __init__(
-            self,
-            train_batch_size: Optional[int] = None,
-            test_batch_size: int = 16,
-            n_train_samples: int = 1024,
-            n_val_samples: Optional[int] = None,
-            n_test_samples: Optional[int] = None,
-            mode: str = 'train',
-            augment: List[str] = ["description", "citations", "references", "az", "recommendations"]
+        self,
+        train_batch_size: Optional[int] = None,
+        test_batch_size: int = 16,
+        n_train_samples: int = 1024,
+        n_val_samples: Optional[int] = None,
+        n_test_samples: Optional[int] = None,
+        mode: str = "train",
+        augment: List[str] = [
+            "description",
+            "citations",
+            "references",
+            "az",
+            "recommendations",
+        ],
     ):
         super().__init__()
-        if mode == 'train':
+        if mode == "train":
             self.expected_batches = n_train_samples / train_batch_size
             # TODO: fix augment parameter for training data
             batch_processing = BatchProcessing(
                 train_batch_size=train_batch_size,
                 n_val_samples=n_val_samples,
                 n_test_samples=n_test_samples,
-                augment=["description", "citations", "references"]
+                augment=["description", "citations", "references"],
             )
-            train_sample_size = int(len(batch_processing.train) // self.expected_batches)
+            train_sample_size = int(
+                len(batch_processing.train) // self.expected_batches
+            )
             self.n_labels = len(batch_processing.classes)
 
             self.train_data = list(batch_processing.train.index.values)
@@ -42,14 +50,12 @@ class SDPDataModule(pl.LightningDataModule, ABC):
         else:
             if mode == "val":
                 batch_processing = BatchProcessing(
-                    mode='val',
-                    n_test_samples=n_test_samples,
-                    augment=augment)
-            elif mode == 'test':
+                    mode="val", n_test_samples=n_test_samples, augment=augment
+                )
+            elif mode == "test":
                 batch_processing = BatchProcessing(
-                    mode='test',
-                    n_test_samples=n_test_samples,
-                    augment=augment)
+                    mode="test", n_test_samples=n_test_samples, augment=augment
+                )
             self.pred_data = list(batch_processing.test.index.values)
             self.pred_batch_size = test_batch_size
             self.pred_batch_processing = batch_processing.build_pred_batch
@@ -61,26 +67,26 @@ class SDPDataModule(pl.LightningDataModule, ABC):
             self.train_data,
             batch_size=self.train_batch_size,
             shuffle=False,
-            collate_fn=self.train_batch_processing
+            collate_fn=self.train_batch_processing,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.val_data,
             batch_size=self.test_batch_size,
-            collate_fn=self.val_batch_processing
+            collate_fn=self.val_batch_processing,
         )
 
     def test_dataloader(self):
         return DataLoader(
             self.test_data,
             batch_size=self.test_batch_size,
-            collate_fn=self.eval_batch_processing
+            collate_fn=self.eval_batch_processing,
         )
 
     def predict_dataloader(self):
         return DataLoader(
             self.pred_data,
             batch_size=self.pred_batch_size,
-            collate_fn=self.pred_batch_processing
+            collate_fn=self.pred_batch_processing,
         )

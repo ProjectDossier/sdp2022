@@ -7,9 +7,9 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    with open('../../config/train_config.yml') as f:
+    with open("../../config/train_config.yml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)["xtremedistil_classifier"]
         config = DotMap(config)
 
@@ -22,9 +22,7 @@ if __name__ == '__main__':
     )
 
     n_training_steps = (
-            data_module.expected_batches *
-            config.TRAIN_BATCH_SIZE *
-            config.N_EPOCHS
+        data_module.expected_batches * config.TRAIN_BATCH_SIZE * config.N_EPOCHS
     )
 
     model = BertClassifier(
@@ -33,7 +31,7 @@ if __name__ == '__main__':
         n_warmup_steps=config.WARMUP_STEPS,
         n_training_steps=n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
-        metric=config.TRACK_METRIC
+        metric=config.TRACK_METRIC,
     )
 
     checkpoint_callback = ModelCheckpoint(
@@ -42,18 +40,15 @@ if __name__ == '__main__':
         save_top_k=1,
         verbose=True,
         monitor=config.TRACK_METRIC,
-        mode="max"
+        mode="max",
     )
 
     logger = TensorBoardLogger(
-        save_dir="../../reports/SDP_logs",
-        name=config.LOGGER_NAME
+        save_dir="../../reports/SDP_logs", name=config.LOGGER_NAME
     )
 
     early_stopping_callback = EarlyStopping(
-        monitor=config.TRACK_METRIC,
-        patience=config.PATIENCE,
-        mode='max'
+        monitor=config.TRACK_METRIC, patience=config.PATIENCE, mode="max"
     )
 
     trainer = pl.Trainer(
@@ -64,14 +59,9 @@ if __name__ == '__main__':
         progress_bar_refresh_rate=1,
         accumulate_grad_batches=config.ACCUM_ITER,
         check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH,
-        log_every_n_steps=10
+        log_every_n_steps=10,
     )
 
-    trainer.fit(
-        model=model,
-        datamodule=data_module
-    )
+    trainer.fit(model=model, datamodule=data_module)
 
-    trainer.test(
-        dataloaders=data_module.test_dataloader()
-    )
+    trainer.test(dataloaders=data_module.test_dataloader())
