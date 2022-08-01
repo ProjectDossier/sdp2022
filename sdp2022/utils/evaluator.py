@@ -127,9 +127,6 @@ class Evaluator:
 
             # in case the samples are augmented, the core_ids would be redundant
             # scores from different sources are aggregated
-            # ['title' 'description' 'recommendation' 'reference' 'citation',
-            #  'az_Claim_Abs' 'az_Method_Abs' 'az_Result_Abs' 'az_Conclusion_Abs']
-            # pred_samples = pred_samples[pred_samples['mode'].isin(fields[:])].copy()
 
             pred_samples.reset_index(drop=True, inplace=True)
 
