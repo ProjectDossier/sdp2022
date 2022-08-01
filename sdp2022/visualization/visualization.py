@@ -15,15 +15,8 @@ if __name__ == "__main__":
     # download summary from https://drive.google.com/file/d/1jar2Zq-14XvCteLkCvN9uBiX6w14LLEH/view?usp=sharing
     pred_samples = pd.read_csv(f"{path}summary.csv", converters={'predictions': converter})
 
-    # fields = ["title", 'az_Claim_Abs', 'az_Method_Abs',
-    #           'az_Conclusion_Abs', 'citation', 'reference',
-    #           'recommendation'
-    #           ]
-    # ori_len = len(pred_samples)
     pred_samples = pred_samples[pred_samples["mode"] != 'recommendation']
-    # pred_samples = pred_samples[pred_samples["mode"].isin(fields[:])]
-    # pred_samples["sample_count"] = pred_samples.groupby("core_id").label.transform('count')
-    # pred_samples = pred_samples[pred_samples.sample_count > 1]
+
     pred_samples.reset_index(drop=True, inplace=True)
 
     data = BatchProcessing(augment=None)
