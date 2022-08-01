@@ -124,6 +124,8 @@ class BatchProcessing:
                 map_classes[class_] = i
             self.classes = list(map_classes.values())
 
+            self.map_classes = map_classes
+
             data["label"] = data.replace({"theme": map_classes})["theme"]
 
             train, self.test, _, _ = train_test_split(
@@ -135,10 +137,10 @@ class BatchProcessing:
             self.train, self.val, _, _ = train_test_split(
                 train, train.label, test_size=val_size, random_state=r_seed
             )
-
-            self.train = add_text(self.train, augment=augment)
-            self.val = add_text(self.val, augment=augment)
-            self.test = add_text(self.test, augment=augment)
+            if augment is not None:
+                self.train = add_text(self.train, augment=augment)
+                self.val = add_text(self.val, augment=augment)
+                self.test = add_text(self.test, augment=augment)
 
             if n_val_samples is not None:
                 self.val = self.val[:n_val_samples]

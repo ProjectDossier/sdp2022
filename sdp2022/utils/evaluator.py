@@ -97,7 +97,9 @@ class Evaluator:
         labels: List[int] = None,
         pred_scores=None,
         epoch: int = -1,
+        save_report: bool = True,
         out_f_name: str = "",
+        return_report: bool = False
     ) -> Dict[str, float]:
         """
 
@@ -113,24 +115,24 @@ class Evaluator:
 
         output_path = self.output_path
 
-        np.save(
-            file=f"{output_path}Evaluator_{out_f_name}_results.pkl",
-            arr=pred_scores,
-            allow_pickle=True,
-            fix_imports=True,
-        )
-
         # in case the original set of examples is given
         if self.pred_samples is not None:
 
             pred_samples = self.pred_samples.copy()
-            pred_samples["predictions"] = [i for i in pred_scores]
+            if "predictions" not in pred_samples.columns:
+                pred_samples["predictions"] = [i for i in pred_scores]
 
             if "theme" in pred_samples.columns:
                 pred_samples.drop(columns="theme", inplace=True)
 
             # in case the samples are augmented, the core_ids would be redundant
             # scores from different sources are aggregated
+
+            pred_samples.reset_index(drop=True, inplace=True)
+
+            if ids is None:
+                ids = pred_samples.index.to_list()
+
             if len(pred_samples.core_id.unique()) != len(pred_samples):
                 pred_samples = pred_samples.groupby("core_id").apply(
                     agg_preds, weighting_scheme=self.weighting_scheme
@@ -184,11 +186,12 @@ class Evaluator:
             ]
 
             # save report
-            for i in ["label", "text", "mode", "predictions", "agg_preds"]:
-                try:
-                    pred_samples.drop(columns=i, inplace=True)
-                except KeyError:
-                    pass
+            if save_report:
+                for i in ["label", "text", "mode", "predictions", "agg_preds"]:
+                    try:
+                        pred_samples.drop(columns=i, inplace=True)
+                    except KeyError:
+                        pass
 
             pred_samples.to_csv(f"{output_path}{self.run_id}.csv")
 
@@ -217,6 +220,9 @@ class Evaluator:
                         writer.writerow(self.csv_headers)
 
                     writer.writerow([epoch] + list(eval.values())[:-1])
-            return eval
+            if return_report:
+                return eval, pred_samples
+            else:
+                return eval
         else:
             return {}
