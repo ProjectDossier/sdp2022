@@ -63,4 +63,7 @@ Project Organization
         │
         ├── training                            <- Scripts to train models
         │
-        └── validate                            <- Scripts to validate models
+        ├── validate                            <- Scripts to validate models
+        │
+        └── visualization                       <- Scripts to create exploratory and results oriented visualizations
+
