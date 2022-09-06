@@ -87,8 +87,8 @@ def train_fasttext(
     model = fasttext.train_supervised(
         input=TRAIN_FILEPATH,
         # lr=lr,
-        # epoch=epoch,
-        # wordNgrams=wordNgrams,
+        epoch=epoch,
+        wordNgrams=wordNgrams,
         # dim=dim,
         # loss=loss,
         # pretrainedVectors=VECTORS_FILEPATH,
@@ -135,7 +135,7 @@ def train_and_evaluate_fasttext(input_data_file, test_column: str = "theme"):
 
     # use same seeds across all baselines
     for seed in seeds:
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.15, random_state=seed)
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.30, random_state=seed)
 
         for train_indexes, test_indexes in sss.split(X, y):
             # split into training and test subsets

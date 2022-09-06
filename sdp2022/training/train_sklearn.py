@@ -3,8 +3,17 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import ComplementNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import NearestCentroid
+from sklearn.ensemble import RandomForestClassifier
+
 
 import argparse
 import os
@@ -152,8 +161,28 @@ if __name__ == "__main__":
     if not os.path.exists(args.output_folder):
         os.makedirs(args.output_folder)
 
-    for model in [MultinomialNB(), KNeighborsClassifier(), SVC()]:
-        results_file = f"{str(model)}-results_summary.tsv"
+    for model, name in (
+            (LogisticRegression(C=5, max_iter=1000), "Logistic Regression"),
+            (RidgeClassifier(alpha=1.0, solver="sparse_cg"), "Ridge Classifier"),
+            (KNeighborsClassifier(n_neighbors=100), "kNN"),
+            (RandomForestClassifier(), "Random Forest"),
+            # L2 penalty Linear SVC
+            (LinearSVC(C=0.1, dual=False, max_iter=1000), "Linear SVC"),
+            # L2 penalty Linear SGD
+            # NearestCentroid (aka Rocchio classifier)
+            (NearestCentroid(), "NearestCentroid"),
+            # Sparse naive Bayes classifier
+            (ComplementNB(alpha=0.1), "Complement naive Bayes"),
+            (
+                    SGDClassifier(
+                        loss="log_loss", alpha=1e-4, n_iter_no_change=3, early_stopping=True
+                    ),
+                    "log-loss SGD",
+            ),
+    ):
+
+    # for model in [MultinomialNB(), KNeighborsClassifier(), LogisticRegression(), SVC(random_state=MODELS_RANDOM_SEED)]:
+        results_file = f"{str(name)}-results_summary.tsv"
         print(model, results_file)
         result_dict = train_and_evaluate_sklearn(model=model, input_data_file=args.infile)
 
