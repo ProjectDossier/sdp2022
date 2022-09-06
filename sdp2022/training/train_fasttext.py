@@ -14,7 +14,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 
 nlp = spacy.load(
-    "en_core_web_sm",
+    "en_core_sci_lg",
     disable=[
         "ner",
         "tok2vec",
@@ -86,11 +86,11 @@ def train_fasttext(
     start = time.time()
     model = fasttext.train_supervised(
         input=TRAIN_FILEPATH,
-        lr=lr,
-        epoch=epoch,
-        wordNgrams=wordNgrams,
-        dim=dim,
-        loss=loss,
+        # lr=lr,
+        # epoch=epoch,
+        # wordNgrams=wordNgrams,
+        # dim=dim,
+        # loss=loss,
         # pretrainedVectors=VECTORS_FILEPATH,
     )
     stop = time.time()
@@ -135,7 +135,7 @@ def train_and_evaluate_fasttext(input_data_file, test_column: str = "theme"):
 
     # use same seeds across all baselines
     for seed in seeds:
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.3, random_state=seed)
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.15, random_state=seed)
 
         for train_indexes, test_indexes in sss.split(X, y):
             # split into training and test subsets
@@ -209,4 +209,4 @@ if __name__ == "__main__":
     else:
         df = pd.DataFrame.from_dict(result_dict).transpose().reset_index()
 
-    df.drop_duplicates().to_csv(args.results_file, sep="\t", index=False)
+    df.drop_duplicates().to_csv(f"{args.output_folder}/{args.results_file}", sep="\t", index=False)
